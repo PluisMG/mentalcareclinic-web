@@ -21,9 +21,10 @@ const navegador = await chromium.launch({
   headless: true,
   args: ["--no-sandbox", "--disable-dev-shm-usage"],
 });
+const contexto = await navegador.newContext();
 
 try {
-  const pagina = await navegador.newPage();
+  const pagina = await contexto.newPage();
   for (const vista of vistas) {
     await pagina.setViewportSize({ width: vista.width, height: vista.height });
     for (const ruta of paginas) {
@@ -97,6 +98,7 @@ try {
 } catch (error) {
   fallar(error instanceof Error ? error.message : String(error));
 } finally {
+  await contexto.close();
   await navegador.close();
   await new Promise((resolve) => servidor.close(resolve));
 }
