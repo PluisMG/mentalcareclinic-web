@@ -3,9 +3,9 @@
 export const consulta = {
   title: "Psiquiatra y psicólogo en Tuxtla Gutiérrez | MentalCareClinic",
   description:
-    "Consulta de psiquiatría, psicología clínica y psicoterapia en Tuxtla Gutiérrez para adolescentes, adultos, parejas y familias. Agenda tu cita por WhatsApp.",
+    "Consulta de psiquiatría, psicología clínica y psicoterapia en Tuxtla Gutiérrez para adolescentes, adultos, parejas y familias. Agende su cita por WhatsApp.",
   h1: "Psiquiatra y psicólogo en Tuxtla Gutiérrez",
-  lead: "Consulta de psiquiatría, psicología clínica y psicoterapia en Tuxtla Gutiérrez para adolescentes, adultos, parejas y familias. Agenda tu cita por WhatsApp.",
+  lead: "Consulta de psiquiatría, psicología clínica y psicoterapia en Tuxtla Gutiérrez para adolescentes, adultos, parejas y familias. Agende su cita por WhatsApp.",
   whatsappMessage:
     "Hola. Quiero agendar una cita de consulta externa en MentalCareClinic, en Tuxtla Gutiérrez.",
   eyebrow: "Consulta externa",
@@ -20,7 +20,7 @@ export const consulta = {
       titulo: "Psiquiatría",
       texto: "Valoración, seguimiento clínico y tratamiento farmacológico cuando está indicado.",
       imagen: "psiquiatria",
-      alt: "Psiquiatría en MentalCareClinic Tuxtla Gutiérrez: cuidado experto para tu bienestar mental",
+      alt: "Psiquiatría en MentalCareClinic Tuxtla Gutiérrez: cuidado experto para su bienestar mental",
     },
     {
       titulo: "Psicología clínica",

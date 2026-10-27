@@ -9,9 +9,9 @@ import { pendientes, site } from "../config/site";
 export const privacidad = {
   title: "Aviso de privacidad | MentalCareClinic",
   description:
-    "Aviso de privacidad de MentalCareClinic, Tuxtla Gutiérrez: qué datos personales y de salud tratamos, para qué y cómo ejercer tus derechos ARCO. Léelo aquí.",
+    "Aviso de privacidad de MentalCareClinic, Tuxtla Gutiérrez: qué datos personales y de salud tratamos, para qué y cómo ejercer sus derechos ARCO. Léalo aquí.",
   h1: "Aviso de privacidad",
-  lead: "Aviso de privacidad de MentalCareClinic, Tuxtla Gutiérrez: qué datos personales y de salud tratamos, para qué y cómo ejercer tus derechos ARCO. Léelo aquí.",
+  lead: "Aviso de privacidad de MentalCareClinic, Tuxtla Gutiérrez: qué datos personales y de salud tratamos, para qué y cómo ejercer sus derechos ARCO. Léalo aquí.",
   whatsappMessage:
     "Hola. Quiero información sobre MentalCareClinic. No enviaré datos de salud por este medio.",
   aviso:

@@ -3,10 +3,9 @@ import Base from "../layouts/Base.astro";
 import CtaBand from "../components/CtaBand.astro";
 import CtaRow from "../components/CtaRow.astro";
 import FaqList from "../components/FaqList.astro";
-import Marker from "../components/Marker.astro";
 import Photo from "../components/Photo.astro";
 import { home } from "../content/home";
-import { pendientes, site } from "../config/site";
+import { site } from "../config/site";
 import fachada from "../assets/images/fachada.png";
 ---
 <Base title={home.title} description={home.description} path="/" whatsappMessage={home.whatsappMessage}>
@@ -107,13 +106,18 @@ import fachada from "../assets/images/fachada.png";
           ))
         }
       </div>
-      <Marker text={pendientes.equipo} />
     </section>
 
     <section class="wrap block prose">
       <h2>{home.filosofia.titulo}</h2>
       <p>{home.intro}</p>
       <p>{home.filosofia.texto}</p>
+      <p>
+        <a href="/historia">Conozca la historia, de Clínica AT a MentalCareClinic</a>
+      </p>
+      <p>
+        <a href="/contacto">Pida una cita informativa en Tuxtla Gutiérrez</a>
+      </p>
     </section>
 
     <div class="wrap">

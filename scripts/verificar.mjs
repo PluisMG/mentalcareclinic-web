@@ -69,8 +69,14 @@ for (const [file, html] of htmlFiles) {
   if (!/<meta name="description" content="[^"]{40,}"/.test(html)) {
     fail(`${file}: falta meta description`);
   }
-  if (!html.includes('"@type":["MedicalClinic","MedicalBusiness"]') && !html.includes('"@type": ["MedicalClinic", "MedicalBusiness"]')) {
-    fail(`${file}: falta JSON-LD MedicalClinic/MedicalBusiness`);
+  if (!html.includes('"@type":"MedicalClinic"')) fail(`${file}: falta JSON-LD MedicalClinic`);
+  if (html.includes("MedicalBusiness")) fail(`${file}: JSON-LD no debe incluir MedicalBusiness`);
+  if (html.includes("/aviso-de-privacidad")) fail(`${file}: el aviso de privacidad no se publica`);
+  if (!html.includes('property="og:image:width" content="1200"')) {
+    fail(`${file}: falta og:image:width 1200`);
+  }
+  if (!html.includes('property="og:image:height" content="630"')) {
+    fail(`${file}: falta og:image:height 630`);
   }
   const alts = [...html.matchAll(/<img\b[^>]*>/gi)];
   for (const match of alts) {
@@ -120,18 +126,22 @@ for (const text of forbidden) {
   if (joined.includes(text)) fail(`Aparece texto que debía eliminarse: ${text}`);
 }
 
-for (const marker of [
-  "[DIRECCIÓN POR CONFIRMAR: Av. 15 Norte #593 o #539]",
-  "[CP POR CONFIRMAR: 29034 o 29010]",
-  "[HORARIO POR CONFIRMAR]",
-  "[POR CONFIRMAR: número de aviso o permiso COFEPRIS]",
-  "[POR CONFIRMAR: precio desde]",
-  "[POR CONFIRMAR: nombre, fotografía y cédula profesional del equipo]",
-  "[POR CONFIRMAR: recorrido y fotos de las instalaciones]",
-  "Borrador pendiente de revisión legal",
-]) {
-  if (!joined.includes(marker)) fail(`Falta el marcador: ${marker}`);
+const textExt = new Set([".html", ".txt", ".xml", ".svg", ".js", ".css", ".json", ".mjs"]);
+const distFiles = await walk(root);
+for (const file of distFiles) {
+  const base = path.basename(file);
+  const ext = path.extname(file);
+  if (base !== "_headers" && base !== "_redirects" && !textExt.has(ext)) continue;
+  const body = await readFile(file, "utf8");
+  for (const marker of ["[POR CONFIRMAR", "Dato pendiente", "[REVISAR CON ABOGADO", "{{"]) {
+    if (body.includes(marker)) fail(`${file}: contiene «${marker}»`);
+  }
+  if (body.toLowerCase().includes("casa de medio camino")) {
+    fail(`${file}: menciona casa de medio camino sin aprobación`);
+  }
 }
+if (joined.includes("Lee la historia")) fail("Quedó el texto «Lee la historia»");
+if (joined.includes("/aviso-de-privacidad")) fail("Quedó un enlace al aviso de privacidad");
 
 const redirects = await readFile("public/_redirects", "utf8");
 for (const line of redirects.split("\n")) {
@@ -151,7 +161,8 @@ if (!(await exists(sitemapPath))) fail("Falta dist/sitemap.xml");
 else {
   const sitemap = await readFile(sitemapPath, "utf8");
   const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
-  if (locs.length < 7) fail(`sitemap.xml tiene ${locs.length} URLs`);
+  if (locs.length !== 6) fail(`sitemap.xml tiene ${locs.length} URLs; se esperaban 6`);
+  if (sitemap.includes("aviso-de-privacidad")) fail("sitemap incluye el aviso de privacidad");
   for (const loc of locs) {
     if (!loc.startsWith("https://www.mentalcareclinic.com")) fail(`URL de sitemap inesperada: ${loc}`);
     const pathname = new URL(loc).pathname;

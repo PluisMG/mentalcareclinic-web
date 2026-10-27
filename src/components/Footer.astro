@@ -1,6 +1,5 @@
 ---
-import Marker from "./Marker.astro";
-import { hayAnalitica, pendientes, site, whatsappHref } from "../config/site";
+import { hayAnalitica, site, whatsappHref } from "../config/site";
 
 interface Props {
   message: string;
@@ -24,22 +23,17 @@ const year = 2026;
     </div>
     <div>
       <p class="footer-label">Dónde estamos</p>
-      <Marker text={pendientes.direccion} />
-      <p>{site.direccion.entre}, {site.direccion.colonia}</p>
-      <Marker text={pendientes.codigoPostal} />
+      <p>{site.direccion.calle}, {site.direccion.entre}, {site.direccion.colonia}</p>
       <p>{site.direccion.ciudad}, {site.direccion.estado}, {site.direccion.pais}</p>
-      <Marker text={pendientes.horario} />
-      <Marker text={pendientes.cofepris} />
     </div>
     <div>
       <p class="footer-label">Enlaces</p>
       <ul class="footer-list">
         <li><a href="/residencia-puertas-abiertas">Residencia de puertas abiertas</a></li>
-        <li><a href="/estabilizacion">Estabilización</a></li>
-        <li><a href="/consulta-externa">Consulta externa</a></li>
-        <li><a href="/historia">Historia</a></li>
-        <li><a href="/contacto">Contacto</a></li>
-        <li><a href="/aviso-de-privacidad">Aviso de privacidad</a></li>
+        <li><a href="/estabilizacion">Estancia psiquiátrica breve</a></li>
+        <li><a href="/consulta-externa">Consulta de psiquiatría y psicología</a></li>
+        <li><a href="/historia">Historia de Clínica AT a MentalCareClinic</a></li>
+        <li><a href="/contacto">Contacto para una cita informativa</a></li>
       </ul>
       <p class="footer-social">
         {

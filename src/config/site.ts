@@ -1,7 +1,6 @@
 /**
- * Datos de la clínica y marcadores pendientes.
- * Edite este archivo para teléfono, WhatsApp, dirección, horarios,
- * COFEPRIS e IDs de analítica. Los textos de cada página están en src/content/.
+ * Datos de la clínica. Los textos de cada página están en src/content/.
+ * `pendientes` guarda datos sin confirmar. No se interpolan en el HTML ni en el JSON-LD.
  *
  * Los IDs de analítica también pueden venir de variables de entorno en el build:
  * PUBLIC_GA4_ID y PUBLIC_META_PIXEL_ID. Si el entorno trae un valor, gana sobre
@@ -58,7 +57,7 @@ export const site = {
   descripcionCorta:
     "Clínica de salud mental en Tuxtla Gutiérrez, Chiapas. Consulta externa y estancia residencial.",
   posicionamiento:
-    "La única residencia abierta y voluntaria de salud mental en Chiapas: el paso entre el hospital y la casa.",
+    "Una residencia abierta y voluntaria de salud mental en Tuxtla Gutiérrez: el paso entre el hospital y la casa.",
   telefono: {
     display: "961 369 2795",
     e164: "+529613692795",
@@ -69,6 +68,7 @@ export const site = {
     numero: "529611003707",
   },
   direccion: {
+    calle: "Av. 15 Norte",
     entre: "entre 4a y 5a Oriente",
     colonia: "Col. La Pimienta",
     ciudad: "Tuxtla Gutiérrez",
@@ -80,7 +80,7 @@ export const site = {
   mapaConsulta:
     "Avenida 15 Norte entre 4a y 5a Oriente, Colonia La Pimienta, Tuxtla Gutiérrez, Chiapas, México",
   visitasErpa:
-    "Como estándar de la residencia de puertas abiertas, las visitas se organizan en horario autorizado, con referencia al sábado de 11:00 a 15:00. Pueden ajustarse según la evolución, el reglamento vigente y el criterio de la clínica.",
+    "Las visitas se organizan en el horario que autoriza la clínica y pueden ajustarse según la evolución, el reglamento vigente y el criterio de la clínica.",
   redes: [
     {
       nombre: "Facebook",
@@ -92,8 +92,18 @@ export const site = {
     },
   ],
   ogImage: "/og.jpg",
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
   ogImageAlt:
     "Estancia Residencial de Puertas Abiertas (ERPA): casa de MentalCareClinic en Tuxtla Gutiérrez",
+} as const;
+
+/** Textos visibles mientras faltan datos que no deben publicarse. */
+export const copiaPublica = {
+  equipo:
+    "Nuestro equipo de psiquiatría, psicología, enfermería y acompañamiento le atiende de forma coordinada.",
+  fotos:
+    "Estas son algunas áreas de la casa. Puede conocerlas en persona en la cita informativa.",
 } as const;
 
 export const navegacion = [
@@ -111,7 +121,6 @@ export const rutasPublicas = [
   "/estabilizacion",
   "/consulta-externa",
   "/historia",
-  "/aviso-de-privacidad",
   "/contacto",
 ] as const;
 
@@ -165,27 +174,6 @@ export function mapaExternoHref(): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(site.mapaConsulta)}`;
 }
 
-export const serviciosEstructurados = [
-  {
-    nombre: "Estancia Residencial de Puertas Abiertas (ERPA)",
-    path: "/residencia-puertas-abiertas",
-    descripcion:
-      "Residencia abierta, voluntaria y no hospitalaria para sostener la vida cotidiana, el tratamiento y la convivencia.",
-  },
-  {
-    nombre: "Estancia Residencial de Estabilización Psiquiátrica (EREP)",
-    path: "/estabilizacion",
-    descripcion:
-      "Estancia residencial breve para estabilización psiquiátrica, sin hospitalización.",
-  },
-  {
-    nombre: "Consulta externa",
-    path: "/consulta-externa",
-    descripcion:
-      "Psiquiatría, psicología clínica, psicoterapia psicoanalítica y medicina general para adolescentes, adultos, parejas y familias.",
-  },
-] as const;
-
 export function datosEstructurados(pagina: { path: string; titulo: string; descripcion: string }) {
   const clinicaId = `${site.url}/#clinica`;
   const sitioId = `${site.url}/#sitio`;
@@ -193,49 +181,63 @@ export function datosEstructurados(pagina: { path: string; titulo: string; descr
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": ["MedicalClinic", "MedicalBusiness"],
+        "@type": "MedicalClinic",
         "@id": clinicaId,
         name: site.nombre,
-        url: site.url,
+        url: `${site.url}/`,
+        logo: `${site.url}/favicon.svg`,
         image: `${site.url}${site.ogImage}`,
         description: site.descripcionCorta,
+        foundingDate: "2014",
         telephone: site.telefono.e164,
         email: site.email,
         medicalSpecialty: "Psychiatric",
         address: {
           "@type": "PostalAddress",
-          streetAddress: `${pendientes.direccion}, ${site.direccion.entre}, ${site.direccion.colonia}`,
+          streetAddress: `${site.direccion.calle}, ${site.direccion.entre}, ${site.direccion.colonia}`,
           addressLocality: site.direccion.ciudad,
           addressRegion: site.direccion.estado,
           addressCountry: site.direccion.paisCodigo,
         },
-        areaServed: {
-          "@type": "City",
-          name: site.direccion.ciudad,
-        },
+        areaServed: [
+          { "@type": "City", name: site.direccion.ciudad },
+          { "@type": "State", name: site.direccion.estado },
+        ],
+        sameAs: site.redes.map((red) => red.href),
         contactPoint: [
           {
             "@type": "ContactPoint",
             telephone: site.telefono.e164,
             contactType: "customer service",
-            availableLanguage: ["Spanish"],
+            availableLanguage: "es",
             areaServed: "MX",
           },
           {
             "@type": "ContactPoint",
             telephone: `+${site.whatsapp.numero}`,
-            contactType: "customer support",
+            contactType: "customer service",
             url: `https://wa.me/${site.whatsapp.numero}`,
-            availableLanguage: ["Spanish"],
+            availableLanguage: "es",
             areaServed: "MX",
           },
         ],
-        availableService: serviciosEstructurados.map((servicio) => ({
-          "@type": "MedicalTherapy",
-          name: servicio.nombre,
-          description: servicio.descripcion,
-          url: canonical(servicio.path),
-        })),
+        availableService: [
+          {
+            "@type": "MedicalTherapy",
+            name: "Estancia Residencial de Puertas Abiertas (ERPA)",
+            url: canonical("/residencia-puertas-abiertas"),
+          },
+          {
+            "@type": "MedicalTherapy",
+            name: "Estancia Residencial de Estabilización Psiquiátrica (EREP)",
+            url: canonical("/estabilizacion"),
+          },
+          {
+            "@type": "MedicalTherapy",
+            name: "Consulta externa: psiquiatría, psicología clínica, psicoterapia y medicina general",
+            url: canonical("/consulta-externa"),
+          },
+        ],
       },
       {
         "@type": "WebSite",

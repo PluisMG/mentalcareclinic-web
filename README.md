@@ -50,9 +50,10 @@ No hay credenciales en este repositorio y no hay que tocar el dominio ni el DNS 
 3. Directorio de salida: `dist`.
 4. El archivo `wrangler.toml` ya declara `pages_build_output_dir = "dist"`.
 5. `public/_redirects` manda las rutas viejas con 301:
-   - `/inicio` → `/`
-   - `/erpa` → `/residencia-puertas-abiertas`
-   - `/erep` → `/estabilizacion`
+   - `/inicio` y `/inicio/` → `/`
+   - `/erpa` y `/erpa/` → `/residencia-puertas-abiertas`
+   - `/erep` y `/erep/` → `/estabilizacion`
+   El formato de `_redirects` no admite query parameters (Cloudflare lo marca como no soportado), así que estos 301 no conservan `utm` ni el resto de `url.search`. Para conservarlos hace falta un Worker que redirija con `url.search`. Ese Worker no está en el repositorio y no se despliega desde aquí. El comentario de `public/_redirects` deja el esquema.
 6. `public/_headers` agrega cabeceras básicas de seguridad.
 7. `robots.txt` y `sitemap.xml` se generan en el build. En producción permiten el rastreo y el sitemap apunta a `https://www.mentalcareclinic.com`.
 
@@ -104,9 +105,10 @@ Meta puede limitar eventos en sitios de salud. No se envía el texto del mensaje
 | `/estabilizacion` | Estabilización psiquiátrica (EREP) |
 | `/consulta-externa` | Consulta externa |
 | `/historia` | Historia, desde Clínica AT |
-| `/contacto` | Teléfono, WhatsApp, dirección y mapa |
-| `/aviso-de-privacidad` | Borrador del aviso, pendiente de abogado |
+| `/contacto` | Teléfono, WhatsApp, dirección confirmada y mapa |
 | `/404` | Página no encontrada |
+
+`/aviso-de-privacidad` no se publica. El borrador sigue en `src/content/privacidad.ts` y `src/borradores/aviso-de-privacidad.astro`, fuera de `src/pages`, del sitemap y de los enlaces, hasta que un abogado entregue el texto.
 
 El mapa de contacto no se incrusta hasta que la persona pulsa «Mostrar mapa». También hay un enlace para abrirlo en Google Maps. La consulta del mapa usa la calle en la que coinciden las fuentes (Avenida 15 Norte, entre 4a y 5a Oriente, Col. La Pimienta). El número de la casa no está fijado.
 
@@ -114,23 +116,24 @@ El mapa de contacto no se incrusta hasta que la persona pulsa «Mostrar mapa». 
 
 La foto está en `src/assets/images/patio-grupal.jpg` y el build la optimiza con el pipeline de imágenes de Astro. Se muestra en `/residencia-puertas-abiertas` y en `/estabilizacion`. Es la foto publicitaria original, de 600×600, con los rostros de los residentes ya difuminados. El texto alternativo lo dice. No hay otra versión en el repositorio.
 
-## Marcadores pendientes
+## Datos que todavía no se publican
 
-Están en el objeto `pendientes` de `src/config/site.ts`. En el sitio se ven con el rótulo «Dato pendiente» y el texto entre corchetes.
+Están en `pendientes` de `src/config/site.ts`. No salen en el HTML ni en el JSON-LD. `npm run build` corre `scripts/verificar.mjs` y falla si `dist/` contiene `[POR CONFIRMAR`, `Dato pendiente`, `[REVISAR CON ABOGADO` o `{{`.
 
-| Marcador | Dónde se ve | Qué falta |
-| --- | --- | --- |
-| `[DIRECCIÓN POR CONFIRMAR: Av. 15 Norte #593 o #539]` | Pie, contacto, aviso, datos estructurados | El sitio anterior dice #593. Directorios de Maps y Facebook dicen #539. |
-| `[CP POR CONFIRMAR: 29034 o 29010]` | Pie, contacto, aviso | 29034 en fichas de Maps, 29010 en Facebook. No va en el JSON-LD hasta que sea un código real. |
-| `[HORARIO POR CONFIRMAR]` | Pie y contacto | No hay horario general de la clínica en el contenido. Las visitas de la ERPA sí: sábado de 11:00 a 15:00, ajustable. Ese dato no se usó como horario de apertura. |
-| `[POR CONFIRMAR: coordenadas para el mapa]` | Contacto | No hay latitud ni longitud en el contenido, así que el JSON-LD no trae `geo`. |
-| `[POR CONFIRMAR: número de aviso o permiso COFEPRIS]` | Pie y contacto | No está en el sitio anterior. |
-| `[POR CONFIRMAR: precio desde]` | Residencia y estabilización | No hay tarifa publicada. Se menciona que el tabulador se acuerda en la valoración. |
-| `[POR CONFIRMAR: nombre, fotografía y cédula profesional del equipo]` | Inicio, residencia, estabilización y consulta | Hay áreas profesionales, no nombres ni cédulas. |
-| `[POR CONFIRMAR: recorrido y fotos de las instalaciones]` | Residencia y estabilización | Están la fachada, un consultorio, una habitación, una pintura del taller y la sesión grupal del patio, con los rostros difuminados. Falta un recorrido y faltan más espacios. |
-| `[POR CONFIRMAR: cuenta de TikTok, si existe]` | Solo en la configuración | El ícono viejo apuntaba a Instagram. No se publica hasta tener la cuenta. |
-| `[POR CONFIRMAR: si la residencia debe presentarse también como casa de medio camino]` | Solo en la configuración | La historia menciona Medio Camino como otro dispositivo, no como sinónimo de la ERPA. No se agregó al título. |
-| Datos del aviso de privacidad (razón social, RFC, domicilio fiscal, correo y teléfono de privacidad, responsable, CURP, facturación, videovigilancia, encargados, aseguradoras, plazos, NOM, PROFECO, menores, fecha, aviso simplificado) | `/aviso-de-privacidad` | El texto es un borrador del 26 de octubre de 2026, con la ley publicada en el DOF el 20 de marzo de 2025. Tiene que revisarlo un abogado antes de tratarlo como aviso definitivo. |
+| Qué falta | Notas |
+| --- | --- |
+| Número de la casa: #593 o #539 | El sitio muestra solo Av. 15 Norte, entre 4a y 5a Oriente, Col. La Pimienta. El JSON-LD no trae el número, ni `postalCode`, ni `geo`, ni `hasMap`, ni horario, ni `alternateName`. |
+| CP: 29034 o 29010 | No se publica. |
+| Horario | No se publica un horario de apertura ni el de visitas. |
+| Coordenadas | El mapa se abre con la calle confirmada. No hay latitud ni longitud. |
+| Aviso o permiso COFEPRIS | No hay bloque de licencia en el pie ni en contacto. |
+| Precio desde | El texto dice que el tabulador se acuerda en la valoración. No hay cifra. |
+| Nombre, fotografía y cédula del equipo | Se usa el texto neutro del equipo. No hay nombres ni cédulas. La historia sigue nombrando a Pedro Luis Maldonado Gordillo; la cédula y la institución quedan pendientes. |
+| Recorrido | Hay fotos de la casa, un consultorio, una habitación, el taller y la sesión del patio. Falta un recorrido. |
+| TikTok | No se publica. |
+| Casa de medio camino | No se usa. La historia menciona Medio Camino como otro dispositivo, no como nombre de la ERPA. |
+| alternateName (Clínica AT, Clínica para el Cuidado Mental) | No va en el JSON-LD hasta que Pedro lo confirme. |
+| Aviso de privacidad | El borrador no se publica. Faltan razón social, RFC, domicilio fiscal, correo y teléfono de privacidad, responsable, CURP, facturación, videovigilancia, encargados, aseguradoras, plazos, NOM, PROFECO, menores, fecha y aviso simplificado. Tiene que revisarlo un abogado. |
 
 También faltan, y no viven en el sitio porque son accesos:
 
@@ -142,4 +145,4 @@ También faltan, y no viven en el sitio porque son accesos:
 
 ## Lo que este sitio no inventa
 
-No hay testimonios, camas, precios, cédulas ni promesa de cura. La frase de portada —la única residencia abierta y voluntaria de salud mental en Chiapas, el paso entre el hospital y la casa— es el posicionamiento pedido para la ERPA. Si no se sostiene, se cambia en `src/config/site.ts` (`posicionamiento`).
+No hay testimonios, camas, precios, cédulas ni promesa de cura. La frase de portada es: «Una residencia abierta y voluntaria de salud mental en Tuxtla Gutiérrez: el paso entre el hospital y la casa.» Vive en `src/config/site.ts` (`posicionamiento`). La imagen Open Graph sale de la fachada, a 1200×630, y el HTML declara `og:image:width` y `og:image:height`.

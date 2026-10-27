@@ -3,14 +3,14 @@
 export const residencia = {
   title: "Residencia de salud mental en Tuxtla | MentalCareClinic",
   description:
-    "Residencia abierta y voluntaria en Tuxtla Gutiérrez: rutina, tratamiento y acompañamiento sin encierro ni hospital. Solicita tu cita informativa gratuita.",
+    "Residencia abierta y voluntaria en Tuxtla Gutiérrez: rutina, tratamiento y acompañamiento sin encierro ni hospital. Solicite su cita informativa gratuita.",
   h1: "Residencia de salud mental en Tuxtla Gutiérrez",
-  lead: "Residencia abierta y voluntaria en Tuxtla Gutiérrez: rutina, tratamiento y acompañamiento sin encierro ni hospital. Solicita tu cita informativa gratuita.",
+  lead: "Residencia abierta y voluntaria en Tuxtla Gutiérrez: rutina, tratamiento y acompañamiento sin encierro ni hospital. Solicite su cita informativa gratuita.",
   whatsappMessage:
     "Hola. Quiero una cita informativa sobre la Estancia Residencial de Puertas Abiertas de MentalCareClinic.",
   eyebrow: "Estancia Residencial de Puertas Abiertas · ERPA",
   definicion:
-    "La Estancia Residencial de Puertas Abiertas es un modelo residencial no hospitalario. Está pensado para personas que necesitan un entorno estructurado, humano y supervisado para sostener su vida cotidiana, su tratamiento y su convivencia, sin quedar privadas de su libertad.",
+    "La Estancia Residencial de Puertas Abiertas es una residencia para pacientes psiquiátricos. Es un modelo residencial no hospitalario, pensado para personas que necesitan un entorno estructurado, humano y supervisado para sostener su vida cotidiana, su tratamiento y su convivencia, sin quedar privadas de su libertad.",
   paraFamilias:
     "Es una alternativa cuando no hace falta hospitalización psiquiátrica, pero sí acompañamiento continuo, organización de hábitos, soporte psicosocial y una familia que sigue participando. Busca evitar que se abandonen el tratamiento, la organización del día o los vínculos.",
   familiaRecibe: {
@@ -280,7 +280,7 @@ export const residencia = {
       a: "No. Se basa en la aceptación voluntaria y en reglas claras. No es un internamiento coercitivo.",
     },
     {
-      q: "¿Puedo llevar comida o pertenencias?",
+      q: "¿Puede llevar comida o pertenencias?",
       a: "No sin autorización. Todo objeto, alimento o pertenencia se revisa y tiene que estar en la lista permitida.",
     },
     {

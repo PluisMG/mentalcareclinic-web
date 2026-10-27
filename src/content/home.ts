@@ -3,14 +3,14 @@
 export const home = {
   title: "Clínica de salud mental en Tuxtla Gutiérrez | MentalCareClinic",
   description:
-    "Psiquiatría, psicología y estancia residencial en Tuxtla Gutiérrez, Chiapas. Atención humana e interdisciplinaria. Agenda tu cita informativa gratuita.",
+    "Psiquiatría, psicología y estancia residencial en Tuxtla Gutiérrez, Chiapas. Atención humana e interdisciplinaria. Agende su cita informativa gratuita.",
   h1: "Clínica de salud mental en Tuxtla Gutiérrez",
-  lead: "Psiquiatría, psicología y estancia residencial en Tuxtla Gutiérrez, Chiapas. Atención humana e interdisciplinaria. Agenda tu cita informativa gratuita.",
+  lead: "Psiquiatría, psicología y estancia residencial en Tuxtla Gutiérrez, Chiapas. Atención humana e interdisciplinaria. Agende su cita informativa gratuita.",
   whatsappMessage:
     "Hola. Quiero información sobre la residencia de puertas abiertas de MentalCareClinic en Tuxtla Gutiérrez.",
-  eyebrow: "Más de una década construyendo una mejor forma de cuidar la salud",
+  eyebrow: "Más de una década cuidando la salud mental en Tuxtla Gutiérrez",
   intro:
-    "MentalCareClinic es una clínica especializada en salud mental en Tuxtla Gutiérrez. Brindamos atención por consulta externa y por estancia residencial. El plan de cada persona se construye con su historia, sus necesidades, su familia y el momento que está viviendo.",
+    "MentalCareClinic es una clínica psiquiátrica en Tuxtla Gutiérrez. Brindamos atención por consulta externa y por estancia residencial. El plan de cada persona se construye con su historia, sus necesidades, su familia y el momento que está viviendo.",
   apoyo:
     "Para las familias, el camino que hoy queremos abrir es la Estancia Residencial de Puertas Abiertas: un lugar entre el hospital y la casa, sin encierro y con la aceptación de la persona.",
   residencia: {
@@ -29,14 +29,14 @@ export const home = {
       texto:
         "La Estancia Residencial de Estabilización Psiquiátrica (EREP) es un periodo corto, en general de 15 días a un mes, para observación, medicamento y contención. No es un hospital.",
       href: "/estabilizacion",
-      enlace: "Ver la estabilización",
+      enlace: "Conozca la estancia psiquiátrica breve",
     },
     {
       titulo: "Consulta externa",
       texto:
         "Psiquiatría, psicología clínica, psicoterapia psicoanalítica y medicina general para adolescentes, adultos, parejas y familias.",
       href: "/consulta-externa",
-      enlace: "Ver la consulta externa",
+      enlace: "Conozca la consulta de psiquiatría y psicología",
     },
   ],
   paraQuien: {
@@ -102,7 +102,7 @@ export const home = {
   equipo: {
     titulo: "Un equipo interdisciplinario",
     intro:
-      "La atención reúne varias miradas. Aquí están las áreas. Los nombres y las cédulas todavía no están publicados.",
+      "Nuestro equipo de psiquiatría, psicología, enfermería y acompañamiento le atiende de forma coordinada.",
     areas: [
       {
         titulo: "Psiquiatría",
@@ -154,8 +154,8 @@ export const home = {
     },
   ],
   cierre: {
-    titulo: "Si buscan el paso entre el hospital y la casa",
+    titulo: "Si busca el paso entre el hospital y la casa",
     texto:
-      "La cita informativa es gratuita. Pueden escribir hoy por WhatsApp o llamar. Les decimos con claridad si la residencia de puertas abiertas es una opción, o si conviene otro servicio.",
+      "La cita informativa es gratuita. Puede escribir hoy por WhatsApp o llamar. Le decimos con claridad si la residencia de puertas abiertas es una opción, o si conviene otro servicio.",
   },
 } as const;

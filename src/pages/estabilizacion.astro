@@ -4,9 +4,8 @@ import CtaBand from "../components/CtaBand.astro";
 import CtaRow from "../components/CtaRow.astro";
 import FaqList from "../components/FaqList.astro";
 import Gallery from "../components/Gallery.astro";
-import Marker from "../components/Marker.astro";
 import { estabilizacion } from "../content/estabilizacion";
-import { pendientes } from "../config/site";
+import { copiaPublica } from "../config/site";
 ---
 <Base
   title={estabilizacion.title}
@@ -51,7 +50,6 @@ import { pendientes } from "../config/site";
     <section class="wrap block">
       <h2>Costo</h2>
       <p>{estabilizacion.precioTexto}</p>
-      <Marker text={pendientes.precioDesde} />
     </section>
 
     <section class="wrap block two">
@@ -62,7 +60,8 @@ import { pendientes } from "../config/site";
         </ul>
       </article>
       <article>
-        <h2>Qué se espera al salir</h2>
+        <h2>Qué se busca al salir</h2>
+        <p>{estabilizacion.salidaIntro}</p>
         <ul class="checklist">
           {estabilizacion.metas.map((item) => <li>{item}</li>)}
         </ul>
@@ -108,8 +107,7 @@ import { pendientes } from "../config/site";
 
     <section class="wrap block">
       <h2>Equipo</h2>
-      <p>Psiquiatría, medicina general, enfermería, apoyo psicológico y la familia trabajan sobre el mismo plan.</p>
-      <Marker text={pendientes.equipo} />
+      <p>{copiaPublica.equipo}</p>
     </section>
 
     <div class="wrap">

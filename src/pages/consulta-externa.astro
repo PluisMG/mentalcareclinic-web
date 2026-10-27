@@ -2,10 +2,9 @@
 import Base from "../layouts/Base.astro";
 import CtaBand from "../components/CtaBand.astro";
 import CtaRow from "../components/CtaRow.astro";
-import Marker from "../components/Marker.astro";
 import Photo from "../components/Photo.astro";
 import { consulta } from "../content/consulta";
-import { pendientes } from "../config/site";
+import { copiaPublica } from "../config/site";
 import psiquiatria from "../assets/images/psiquiatria.png";
 import psicologia from "../assets/images/psicologia.png";
 import psicoterapia from "../assets/images/psicoterapia.png";
@@ -51,13 +50,15 @@ const imagenes: Record<string, ImageMetadata> = {
           ))
         }
       </div>
-      <Marker text={pendientes.equipo} />
+      <p>{copiaPublica.equipo}</p>
     </section>
 
     <section class="wrap block panel panel-accent">
       <h2>Si hace falta más que una cita</h2>
       <p>{consulta.residencia}</p>
-      <p><a href="/residencia-puertas-abiertas">Ver la residencia de puertas abiertas</a></p>
+      <p>
+        <a href="/residencia-puertas-abiertas">Conozca la residencia de puertas abiertas</a>
+      </p>
     </section>
 
     <div class="wrap">

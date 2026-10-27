@@ -1,9 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
 import Icon from "../components/Icon.astro";
-import Marker from "../components/Marker.astro";
 import { contacto } from "../content/contacto";
-import { mapaExternoHref, pendientes, site, whatsappHref } from "../config/site";
+import { mapaExternoHref, site, whatsappHref } from "../config/site";
 ---
 <Base
   title={contacto.title}
@@ -50,24 +49,15 @@ import { mapaExternoHref, pendientes, site, whatsappHref } from "../config/site"
         <h2>Dirección</h2>
         <p>
           <Icon name="pin" />
-          {site.direccion.ciudad}, {site.direccion.estado}
+          {site.direccion.calle}, {site.direccion.entre}, {site.direccion.colonia}
         </p>
-        <Marker text={pendientes.direccion} />
-        <p>{site.direccion.entre}, {site.direccion.colonia}</p>
-        <Marker text={pendientes.codigoPostal} />
-        <h2>Horario</h2>
-        <Marker text={pendientes.horario} />
-        <h3>Visitas de la residencia</h3>
-        <p>{site.visitasErpa}</p>
-        <h2>Permiso sanitario</h2>
-        <Marker text={pendientes.cofepris} />
+        <p>{site.direccion.ciudad}, {site.direccion.estado}, {site.direccion.pais}</p>
       </section>
     </div>
 
     <section class="wrap block map-panel" data-map data-map-query={site.mapaConsulta}>
       <h2>Mapa</h2>
       <p>{contacto.mapaNota}</p>
-      <Marker text={pendientes.coordenadas} />
       <p>
         El mapa de Google no se carga solo. Así esta página sigue siendo rápida y no comparte datos con Google hasta
         que usted lo pide.

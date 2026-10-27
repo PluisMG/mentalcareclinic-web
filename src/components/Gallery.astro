@@ -1,7 +1,6 @@
 ---
-import Marker from "./Marker.astro";
 import Photo from "./Photo.astro";
-import { pendientes } from "../config/site";
+import { copiaPublica } from "../config/site";
 import fachada from "../assets/images/fachada.png";
 import consultorio from "../assets/images/consultorio.jpg";
 import habitacion from "../assets/images/habitacion.png";
@@ -33,12 +32,7 @@ const fotos = [
 ---
 <section class="block" id="instalaciones">
   <h2>Instalaciones</h2>
-  <p>
-    Se muestran la casa, un consultorio, una habitación, una pieza del taller y una sesión grupal en el patio.
-    En esa sesión, los rostros de los residentes están difuminados.
-  </p>
-  <p>Sigue faltando un recorrido en video y fotos de más espacios.</p>
-  <Marker text={pendientes.recorrido} />
+  <p>{copiaPublica.fotos}</p>
   <div class="gallery">
     {
       fotos.map((foto) => (

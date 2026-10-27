@@ -1,11 +1,11 @@
 /** Textos de la Estancia Residencial de Estabilización Psiquiátrica (antes /erep). */
 
 export const estabilizacion = {
-  title: "Estabilización psiquiátrica en Tuxtla | MentalCareClinic",
+  title: "Estancia psiquiátrica breve en Tuxtla | MentalCareClinic",
   description:
-    "Estancia residencial breve en Tuxtla Gutiérrez para estabilizarse con psiquiatría, enfermería y familia, sin hospitalización. Habla hoy con un asesor.",
-  h1: "Estabilización psiquiátrica en Tuxtla Gutiérrez",
-  lead: "Estancia residencial breve en Tuxtla Gutiérrez para estabilizarse con psiquiatría, enfermería y familia, sin hospitalización. Habla hoy con un asesor.",
+    "Estancia psiquiátrica breve en Tuxtla Gutiérrez para estabilizarse con psiquiatría, enfermería y familia, sin hospitalización. Hable hoy con un asesor.",
+  h1: "Estancia psiquiátrica breve en Tuxtla Gutiérrez",
+  lead: "Estancia psiquiátrica breve en Tuxtla Gutiérrez para estabilizarse con psiquiatría, enfermería y familia, sin hospitalización. Hable hoy con un asesor.",
   whatsappMessage:
     "Hola. Quiero información sobre la estancia de estabilización psiquiátrica (EREP) de MentalCareClinic.",
   eyebrow: "Estancia Residencial de Estabilización Psiquiátrica · EREP",
@@ -69,15 +69,16 @@ export const estabilizacion = {
     "Relación con la familia.",
     "Si el plan debe continuar o cambiar.",
   ],
+  salidaIntro: "Objetivos que se trabajan; los resultados dependen de cada persona:",
   metas: [
-    "Más estabilidad clínica que al ingreso.",
-    "Menos desorganización emocional o conductual.",
-    "Mejor tolerancia a la rutina y al acompañamiento.",
-    "Mayor adherencia al tratamiento.",
-    "Mejoría básica en sueño, higiene, alimentación y autocuidado.",
-    "Disminución del riesgo inmediato.",
-    "Una ruta clara de continuidad.",
-    "Más orientación para la familia.",
+    "Trabajar la estabilidad clínica a partir del estado de ingreso.",
+    "Acompañar la organización emocional y conductual.",
+    "Favorecer la tolerancia a la rutina y al acompañamiento.",
+    "Apoyar la adherencia al tratamiento indicado.",
+    "Cuidar el sueño, la higiene, la alimentación y el autocuidado.",
+    "Atender el riesgo inmediato mientras dura la estancia.",
+    "Dejar preparada una ruta de continuidad.",
+    "Orientar a la familia sobre lo que sigue.",
   ],
   noCura:
     "La EREP no garantiza una cura en un mes. Es un periodo breve de estabilización y reorganización para seguir el tratamiento en mejores condiciones.",
@@ -141,9 +142,9 @@ export const estabilizacion = {
     },
   ],
   cierre: {
-    titulo: "Si necesitan un periodo breve de estabilización",
+    titulo: "Si necesita un periodo breve de estabilización",
     texto:
-      "Escriban o llamen para una orientación. Les decimos si la EREP es pertinente o si conviene la residencia de puertas abiertas, la consulta externa u otro nivel de atención.",
+      "Escriba o llame para una orientación. Le decimos si la EREP es pertinente o si conviene la residencia de puertas abiertas, la consulta externa u otro nivel de atención.",
   },
   nota: "Esta información no sustituye la valoración clínica individual. Servicios, horarios y condiciones pueden ajustarse conforme al reglamento vigente, la disponibilidad de la clínica y las necesidades del caso.",
 } as const;

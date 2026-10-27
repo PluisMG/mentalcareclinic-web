@@ -3,9 +3,9 @@
 export const historia = {
   title: "Antes Clínica AT: historia en Tuxtla | MentalCareClinic",
   description:
-    "Desde 2014 en Tuxtla Gutiérrez: de Clínica AT a MentalCareClinic. Conoce cómo cuidamos la salud mental con un equipo interdisciplinario. Lee la historia.",
-  h1: "Nuestra historia",
-  lead: "Desde 2014 en Tuxtla Gutiérrez: de Clínica AT a MentalCareClinic. Conoce cómo cuidamos la salud mental con un equipo interdisciplinario. Lee la historia.",
+    "Desde 2014 en Tuxtla Gutiérrez: de Clínica AT a MentalCareClinic. Conozca cómo nació y cómo trabaja hoy nuestro equipo interdisciplinario de salud mental.",
+  h1: "Nuestra historia: de Clínica AT a MentalCareClinic",
+  lead: "Desde 2014 en Tuxtla Gutiérrez: de Clínica AT a MentalCareClinic. Conozca cómo nació y cómo trabaja hoy nuestro equipo interdisciplinario de salud mental.",
   whatsappMessage:
     "Hola. Quiero información sobre los servicios de MentalCareClinic en Tuxtla Gutiérrez.",
   eyebrow: "Tuxtla Gutiérrez, Chiapas",
@@ -63,5 +63,5 @@ export const historia = {
   cierrePregunta:
     "¿Cómo crear un lugar donde una persona pueda ser atendida clínicamente sin dejar de ser reconocida como sujeto de su propia historia?",
   cierreTexto:
-    "Esa pregunta sigue guiando el trabajo. Si hoy buscan un lugar entre el hospital y la casa, la residencia de puertas abiertas es el servicio que pueden conocer primero.",
+    "Esa pregunta sigue guiando el trabajo. Si hoy busca un lugar entre el hospital y la casa, la residencia de puertas abiertas es el servicio que puede conocer primero.",
 } as const;

@@ -4,9 +4,8 @@ import CtaBand from "../components/CtaBand.astro";
 import CtaRow from "../components/CtaRow.astro";
 import FaqList from "../components/FaqList.astro";
 import Gallery from "../components/Gallery.astro";
-import Marker from "../components/Marker.astro";
 import { residencia } from "../content/residencia";
-import { pendientes } from "../config/site";
+import { copiaPublica } from "../config/site";
 ---
 <Base
   title={residencia.title}
@@ -21,6 +20,12 @@ import { pendientes } from "../config/site";
       <p class="lead">{residencia.lead}</p>
       <p class="position">{residencia.definicion}</p>
       <p>{residencia.paraFamilias}</p>
+      <p>
+        Si lo que hay que valorar es un periodo corto, vea la
+        <a href="/estabilizacion">estancia psiquiátrica breve</a>. Si basta una cita, vea la
+        <a href="/consulta-externa">consulta de psiquiatría y psicología</a>. Para pedir orientación, use la
+        <a href="/contacto">página de contacto de la clínica</a>.
+      </p>
       <CtaRow message={residencia.whatsappMessage} primary="Pedir cita informativa" />
       <p class="fine">Gratuita, virtual o presencial. El ingreso siempre pasa por una valoración.</p>
     </header>
@@ -82,7 +87,6 @@ import { pendientes } from "../config/site";
     <section class="wrap block">
       <h2>Costo</h2>
       <p>{residencia.precioTexto}</p>
-      <Marker text={pendientes.precioDesde} />
     </section>
 
     <section class="wrap block">
@@ -120,8 +124,8 @@ import { pendientes } from "../config/site";
       </div>
       <h3>Visitas</h3>
       <p>
-        Como estándar de la residencia, las visitas se organizan en horario autorizado, con referencia al sábado de
-        11:00 a 15:00. Pueden ajustarse según la evolución, el reglamento vigente y el criterio de la clínica.
+        Las visitas se organizan en el horario que autoriza la clínica y pueden ajustarse según la evolución, el
+        reglamento vigente y el criterio de la clínica.
       </p>
     </section>
 
@@ -173,7 +177,7 @@ import { pendientes } from "../config/site";
       <ul class="checklist">
         {residencia.equipo.items.map((item) => <li>{item}</li>)}
       </ul>
-      <Marker text={pendientes.equipo} />
+      <p>{copiaPublica.equipo}</p>
     </section>
 
     <section class="wrap block">

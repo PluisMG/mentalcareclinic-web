@@ -9,7 +9,7 @@
   "scripts": {
     "prebuild": "node scripts/og.mjs",
     "dev": "astro dev --host 127.0.0.1 --port 43123",
-    "build": "astro build",
+    "build": "astro build && node scripts/verificar.mjs",
     "preview": "astro preview --host 127.0.0.1 --port 43123",
     "verificar": "node scripts/verificar.mjs",
     "astro": "astro"
