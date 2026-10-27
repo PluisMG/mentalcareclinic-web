@@ -144,8 +144,8 @@ try {
     fallar("El pie no vuelve a mostrar el aviso");
   }
   await rechazar.locator("#consent-reject").click();
-  await rechazar.locator("a[href^='tel:']").first().click({ noWaitAfter: true });
-  await rechazar.locator("a[href*='wa.me/']").first().click({ noWaitAfter: true });
+  await rechazar.locator("footer a[href^='tel:']").click({ noWaitAfter: true });
+  await rechazar.locator("a.float").click({ noWaitAfter: true });
   await rechazar.waitForTimeout(500);
   if (silenciosas.some((url) => esGoogle(url))) fallar("Rechazar igual cargó Google");
   await rechazar.close();
