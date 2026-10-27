@@ -23,6 +23,11 @@
   box-sizing: border-box;
 }
 
+/* display en .consent y .btn no debe anular el atributo hidden. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-bottom: 6rem;
