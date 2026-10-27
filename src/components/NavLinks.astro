@@ -1,0 +1,23 @@
+---
+import { navegacion, site } from "../config/site";
+
+interface Props {
+  path: string;
+  showCall?: boolean;
+}
+const { path, showCall = false } = Astro.props;
+---
+{
+  navegacion.map((item) => (
+    <a href={item.href} aria-current={item.href === path ? "page" : undefined}>
+      {item.label}
+    </a>
+  ))
+}
+{
+  showCall && (
+    <a class="nav-call" href={site.telefono.href} data-track="llamada">
+      Llamar al {site.telefono.display}
+    </a>
+  )
+}

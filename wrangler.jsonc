@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Nombre neutro. Sin account_id, sin routes y sin dominio: no apunta DNS ni producción.
+  "name": "mentalcareclinic",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-10-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "upload_source_maps": true,
+  // El despliegue, cuando Pedro lo apruebe, no crea <name>.workers.dev ni un dominio propio.
+  "workers_dev": false,
+  // Vacío en producción. La vista previa noindex usa `wrangler dev --var PREVIEW:1` (o el mismo --var al desplegar).
+  "vars": {
+    "PREVIEW": ""
+  },
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1 },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Astro genera cada página como carpeta/index.html y trailingSlash es "never".
+    // drop-trailing-slash sirve /contacto en 200. auto-trailing-slash la mandaría a /contacto/.
+    // not_found_handling 404-page equivale a la 404.html que Pages detectaba solo.
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page",
+    // Todas las peticiones: el Worker compara /inicio, /erpa y /erep sin distinguir mayúsculas
+    // (/ERPA, /Erep, /INICIO) y, si no hay 301, delega en los assets.
+    "run_worker_first": true
+  }
+}

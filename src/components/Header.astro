@@ -1,0 +1,51 @@
+---
+import Icon from "./Icon.astro";
+import NavLinks from "./NavLinks.astro";
+import { site, whatsappHref } from "../config/site";
+
+interface Props {
+  message: string;
+}
+const { message } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, "") || "/";
+---
+<header class="site-header">
+  <div class="wrap header-bar">
+    <a class="logo" href="/">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="32" height="32">
+          <rect width="32" height="32" rx="8" fill="currentColor"></rect>
+          <path d="M8 26V14.2C8 10.3 11.2 7.2 16 7.2s8 3.1 8 7V26" fill="none" stroke="#F7F3EC" stroke-width="1.8"></path>
+          <path d="M13.2 26v-6.2a2.8 2.8 0 0 1 5.6 0V26" fill="none" stroke="#E4C48A" stroke-width="1.8"></path>
+        </svg>
+      </span>
+      <span class="logo-text">
+        <span class="logo-name">MentalCareClinic</span>
+        <span class="logo-place">Tuxtla Gutiérrez</span>
+      </span>
+    </a>
+    <nav class="nav nav-bar" aria-label="Secciones">
+      <NavLinks path={path} />
+    </nav>
+    <details class="menu">
+      <summary>
+        <span class="menu-bars" aria-hidden="true"></span>
+        Menú
+      </summary>
+      <nav class="nav nav-panel" aria-label="Secciones">
+        <NavLinks path={path} showCall />
+      </nav>
+    </details>
+    <div class="header-actions">
+      <a class="btn btn-primary btn-small" href={whatsappHref(message)} data-track="whatsapp" target="_blank" rel="noopener noreferrer">
+        <Icon name="whatsapp" />
+        WhatsApp
+        <span class="sr-only"> (se abre en otra pestaña)</span>
+      </a>
+      <a class="btn btn-ghost btn-small header-call" href={site.telefono.href} data-track="llamada">
+        <Icon name="phone" />
+        <span class="sr-only">Llamar al </span>{site.telefono.display}
+      </a>
+    </div>
+  </div>
+</header>

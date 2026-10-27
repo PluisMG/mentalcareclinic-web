@@ -1,0 +1,28 @@
+---
+import Base from "../layouts/Base.astro";
+import CtaRow from "../components/CtaRow.astro";
+
+const title = "Página no encontrada | MentalCareClinic";
+const description = "Esta dirección no existe en MentalCareClinic. Vuelva al inicio o a la residencia de puertas abiertas.";
+const message = "Hola. Quiero información sobre MentalCareClinic en Tuxtla Gutiérrez.";
+---
+<Base title={title} description={description} path="/404" whatsappMessage={message} noindex>
+  <div class="page">
+    <div class="wrap prose">
+      <p class="eyebrow">Error 404</p>
+      <h1>Esta página no existe</h1>
+      <p>
+        El enlace puede ser de la versión anterior del sitio. La residencia de puertas abiertas está en una dirección
+        nueva.
+      </p>
+      <ul class="checklist">
+        <li><a href="/">Inicio</a></li>
+        <li><a href="/residencia-puertas-abiertas">Residencia de puertas abiertas</a></li>
+        <li><a href="/estabilizacion">Estabilización</a></li>
+        <li><a href="/consulta-externa">Consulta externa</a></li>
+        <li><a href="/contacto">Contacto</a></li>
+      </ul>
+      <CtaRow message={message} />
+    </div>
+  </div>
+</Base>

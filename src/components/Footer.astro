@@ -1,0 +1,67 @@
+---
+import Icon from "./Icon.astro";
+import { hayAnalitica, site, whatsappHref } from "../config/site";
+
+interface Props {
+  message: string;
+}
+const { message } = Astro.props;
+const year = 2026;
+---
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <p class="footer-name">MentalCareClinic</p>
+      <p>Consulta externa y estancia residencial en {site.direccion.ciudad}, {site.direccion.estado}.</p>
+      <p class="footer-links">
+        <a href={site.telefono.href} data-track="llamada">{site.telefono.display}</a>
+        <a href={whatsappHref(message)} data-track="whatsapp" target="_blank" rel="noopener noreferrer">
+          WhatsApp {site.whatsapp.display}
+          <span class="sr-only"> (se abre en otra pestaña)</span>
+        </a>
+        <a href={site.emailHref}>{site.email}</a>
+      </p>
+    </div>
+    <div>
+      <p class="footer-label">Dónde estamos</p>
+      <p>{site.direccion.calle}, {site.direccion.entre}, {site.direccion.colonia}</p>
+      <p>{site.direccion.ciudad}, {site.direccion.estado}, {site.direccion.pais}</p>
+    </div>
+    <div>
+      <p class="footer-label">Enlaces</p>
+      <ul class="footer-list">
+        <li><a href="/residencia-puertas-abiertas">Residencia de puertas abiertas</a></li>
+        <li><a href="/estabilizacion">Estancia psiquiátrica breve</a></li>
+        <li><a href="/consulta-externa">Consulta de psiquiatría y psicología</a></li>
+        <li><a href="/historia">Historia de Clínica AT a MentalCareClinic</a></li>
+        <li><a href="/contacto">Contacto para una cita informativa</a></li>
+      </ul>
+      <p class="footer-social">
+        {
+          site.redes.map((red) => (
+            <a href={red.href} target="_blank" rel="noopener noreferrer">
+              {red.nombre}
+              <span class="sr-only"> de MentalCareClinic (se abre en otra pestaña)</span>
+            </a>
+          ))
+        }
+      </p>
+      {
+        hayAnalitica() && (
+          <p>
+            <button type="button" class="text-button" id="cookie-prefs">Cambiar la decisión de cookies</button>
+          </p>
+        )
+      }
+    </div>
+  </div>
+  <div class="wrap footer-base">
+    <p>© {year} MentalCareClinic. {site.direccion.ciudad}, {site.direccion.estado}.</p>
+    <p>La información del sitio no sustituye una valoración clínica.</p>
+  </div>
+  <a class="float" href={whatsappHref(message)} target="_blank" rel="noopener noreferrer">
+    <Icon name="whatsapp" />
+    WhatsApp
+    <span class="sr-only"> (se abre en otra pestaña)</span>
+  </a>
+</footer>

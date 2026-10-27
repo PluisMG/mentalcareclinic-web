@@ -1,0 +1,3 @@
+# Rutas del sitio anterior (Google Sites): /inicio, /erpa y /erep.
+# Este archivo no declara redirecciones. El formato de _redirects no conserva el query string.
+# El Worker es el que responde 301 y conserva el query string.

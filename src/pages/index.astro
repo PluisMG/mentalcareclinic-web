@@ -1,0 +1,129 @@
+---
+import Base from "../layouts/Base.astro";
+import CtaBand from "../components/CtaBand.astro";
+import CtaRow from "../components/CtaRow.astro";
+import FaqList from "../components/FaqList.astro";
+import Photo from "../components/Photo.astro";
+import { home } from "../content/home";
+import { site } from "../config/site";
+import fachada from "../assets/images/fachada.png";
+---
+<Base title={home.title} description={home.description} path="/" whatsappMessage={home.whatsappMessage}>
+  <div class="page">
+    <section class="wrap hero">
+      <div>
+        <p class="eyebrow">{home.eyebrow}</p>
+        <h1>{home.h1}</h1>
+        <p class="lead">{home.lead}</p>
+        <p class="position">{site.posicionamiento}</p>
+        <p>{home.apoyo}</p>
+        <CtaRow message={home.whatsappMessage} />
+        <p class="fine">La cita informativa no tiene costo y puede ser virtual o presencial.</p>
+      </div>
+      <div class="frame arch">
+        <Photo
+          src={fachada}
+          alt="Estancia Residencial de Puertas Abiertas (ERPA): casa de MentalCareClinic en Tuxtla Gutiérrez"
+          sizes="(min-width: 1080px) 462px, calc(100vw - 2rem)"
+          widths={[400, 480, 600]}
+          priority
+        />
+      </div>
+    </section>
+
+    <section class="wrap block">
+      <div class="split">
+        <div class="panel panel-accent">
+          <p class="eyebrow">Para las familias</p>
+          <h2>{home.residencia.titulo}</h2>
+          <p>{home.residencia.texto}</p>
+          <ul class="checklist">
+            {home.residencia.puntos.map((punto) => <li>{punto}</li>)}
+          </ul>
+          <p><a href="/residencia-puertas-abiertas">Conocer la residencia de puertas abiertas</a></p>
+        </div>
+        <div class="cards">
+          {
+            home.otras.map((item) => (
+              <article class="card">
+                <h3>{item.titulo}</h3>
+                <p>{item.texto}</p>
+                <p>
+                  <a href={item.href}>{item.enlace}</a>
+                </p>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap block">
+      <h2>{home.paraQuien.titulo}</h2>
+      <p class="prose">{home.paraQuien.intro}</p>
+      <ul class="checklist">
+        {home.paraQuien.items.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+
+    <section class="wrap block">
+      <h2>{home.trabajo.titulo}</h2>
+      <div class="cards">
+        {
+          home.trabajo.items.map((item) => (
+            <article class="card">
+              <h3>{item.titulo}</h3>
+              <p>{item.texto}</p>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="wrap block">
+      <h2>{home.proceso.titulo}</h2>
+      <ol class="steps">
+        {
+          home.proceso.pasos.map((paso) => (
+            <li>
+              <h3>{paso.titulo}</h3>
+              <p>{paso.texto}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="wrap block">
+      <h2>{home.equipo.titulo}</h2>
+      <p>{home.equipo.intro}</p>
+      <div class="cards">
+        {
+          home.equipo.areas.map((area) => (
+            <article class="card">
+              <h3>{area.titulo}</h3>
+              <p>{area.texto}</p>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="wrap block prose">
+      <h2>{home.filosofia.titulo}</h2>
+      <p>{home.intro}</p>
+      <p>{home.filosofia.texto}</p>
+      <p>
+        <a href="/historia">Conozca la historia, de Clínica AT a MentalCareClinic</a>
+      </p>
+      <p>
+        <a href="/contacto">Pida una cita informativa en Tuxtla Gutiérrez</a>
+      </p>
+    </section>
+
+    <div class="wrap">
+      <FaqList items={home.faqs} />
+      <CtaBand title={home.cierre.titulo} text={home.cierre.texto} message={home.whatsappMessage} />
+    </div>
+  </div>
+</Base>

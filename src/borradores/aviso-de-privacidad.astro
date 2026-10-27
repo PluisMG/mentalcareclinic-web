@@ -1,0 +1,34 @@
+---
+import Base from "../layouts/Base.astro";
+import { privacidad } from "../content/privacidad";
+---
+<Base
+  title={privacidad.title}
+  description={privacidad.description}
+  path="/aviso-de-privacidad"
+  whatsappMessage={privacidad.whatsappMessage}
+>
+  <article class="page">
+    <header class="wrap prose">
+      <h1>{privacidad.h1}</h1>
+      <p class="lead">{privacidad.lead}</p>
+      <div class="draft">
+        <p><strong>Borrador pendiente de revisión legal.</strong></p>
+        <p>{privacidad.aviso}</p>
+        <p>{privacidad.actualizacion}</p>
+      </div>
+    </header>
+    <div class="wrap prose">
+      {
+        privacidad.secciones.map((seccion) => (
+          <section>
+            <h2>{seccion.titulo}</h2>
+            {seccion.parrafos.map((parrafo) => (
+              <p>{parrafo}</p>
+            ))}
+          </section>
+        ))
+      }
+    </div>
+  </article>
+</Base>

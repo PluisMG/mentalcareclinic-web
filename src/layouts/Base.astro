@@ -1,0 +1,98 @@
+---
+import "../styles/global.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import {
+  analitica,
+  canonical,
+  datosEstructurados,
+  esVistaPrevia,
+  hayAnalitica,
+  site,
+} from "../config/site";
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  whatsappMessage: string;
+  noindex?: boolean;
+}
+
+const { title, description, path, whatsappMessage, noindex = false } = Astro.props;
+const vistaPrevia = esVistaPrevia();
+const robots = vistaPrevia ? "noindex" : noindex ? "noindex, follow" : "index, follow";
+const canon = canonical(path);
+const json = JSON.stringify(datosEstructurados({ path, titulo: title, descripcion: description })).replace(
+  /</g,
+  "\\u003c",
+);
+const ogImage = `${site.url}${site.ogImage}`;
+---
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canon} />
+    <link rel="alternate" hreflang="es-MX" href={canon} />
+    <meta name="robots" content={robots} />
+    <meta name="theme-color" content="#1B4332" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_MX" />
+    <meta property="og:site_name" content={site.nombre} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canon} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content={String(site.ogImageWidth)} />
+    <meta property="og:image:height" content={String(site.ogImageHeight)} />
+    <meta property="og:image:alt" content={site.ogImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script type="application/ld+json" set:html={json} />
+  </head>
+  <body data-ga4={analitica.ga4 || undefined}>
+    <a class="skip" href="#contenido">Saltar al contenido</a>
+    <Header message={whatsappMessage} />
+    <main id="contenido">
+      <slot />
+    </main>
+    <Footer message={whatsappMessage} />
+    {
+      hayAnalitica() && (
+        <div id="consent" class="consent" role="region" aria-labelledby="consent-title" hidden>
+          <div class="consent-copy">
+            <p id="consent-title">Medición de visitas</p>
+            <p>
+              Si acepta, Google Analytics cuenta las páginas que ve y los clics en WhatsApp o en el teléfono, para
+              saber si el sitio ayuda a las familias a pedir una cita. No enviamos datos de salud ni usamos
+              publicidad. Si rechaza, esa medición no se carga.
+            </p>
+          </div>
+          <div class="consent-actions">
+            <button type="button" class="btn btn-choice" id="consent-accept">
+              Aceptar
+            </button>
+            <button type="button" class="btn btn-choice" id="consent-reject">
+              Rechazar
+            </button>
+          </div>
+        </div>
+      )
+    }
+    <script>
+      import { iniciarSitio } from "../scripts/consent";
+      // load, no antes: el módulo diferido corre antes del primer paint y retrasaba
+      // el párrafo del encabezado, que es el LCP en la residencia.
+      const arrancar = () => iniciarSitio();
+      if (document.readyState === "complete") arrancar();
+      else window.addEventListener("load", arrancar, { once: true });
+    </script>
+  </body>
+</html>

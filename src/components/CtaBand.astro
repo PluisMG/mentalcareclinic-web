@@ -1,0 +1,15 @@
+---
+import CtaRow from "./CtaRow.astro";
+
+interface Props {
+  title: string;
+  text: string;
+  message: string;
+}
+const { title, text, message } = Astro.props;
+---
+<aside class="cta-band">
+  <h2>{title}</h2>
+  <p>{text}</p>
+  <CtaRow message={message} />
+</aside>

@@ -1,0 +1,208 @@
+---
+import Base from "../layouts/Base.astro";
+import CtaBand from "../components/CtaBand.astro";
+import CtaRow from "../components/CtaRow.astro";
+import FaqList from "../components/FaqList.astro";
+import Gallery from "../components/Gallery.astro";
+import { residencia } from "../content/residencia";
+import { copiaPublica } from "../config/site";
+---
+<Base
+  title={residencia.title}
+  description={residencia.description}
+  path="/residencia-puertas-abiertas"
+  whatsappMessage={residencia.whatsappMessage}
+>
+  <div class="page">
+    <header class="wrap">
+      <p class="eyebrow">{residencia.eyebrow}</p>
+      <h1>{residencia.h1}</h1>
+      <p class="lead">{residencia.lead}</p>
+      <p class="position">{residencia.definicion}</p>
+      <p>{residencia.paraFamilias}</p>
+      <p>
+        Si lo que hay que valorar es un periodo corto, vea la
+        <a href="/estabilizacion">estancia psiquiátrica breve</a>. Si basta una cita, vea la
+        <a href="/consulta-externa">consulta de psiquiatría y psicología</a>. Para pedir orientación, use la
+        <a href="/contacto">página de contacto de la clínica</a>.
+      </p>
+      <CtaRow message={residencia.whatsappMessage} primary="Pedir cita informativa" />
+      <p class="fine">Gratuita, virtual o presencial. El ingreso siempre pasa por una valoración.</p>
+    </header>
+
+    <section class="wrap block">
+      <h2>{residencia.familiaRecibe.titulo}</h2>
+      <ul class="checklist">
+        {residencia.familiaRecibe.items.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+
+    <section class="wrap block two">
+      <article class="panel panel-accent">
+        <h2>{residencia.es.titulo}</h2>
+        <ul class="checklist">
+          {residencia.es.items.map((item) => <li>{item}</li>)}
+        </ul>
+      </article>
+      <article class="panel">
+        <h2>{residencia.noEs.titulo}</h2>
+        <ul class="plain-list">
+          {residencia.noEs.items.map((item) => <li>{item}</li>)}
+        </ul>
+      </article>
+    </section>
+    <p class="wrap">{residencia.ingresoNota}</p>
+
+    <section class="wrap block">
+      <h2>{residencia.paraQuien.titulo}</h2>
+      <p>{residencia.paraQuien.intro}</p>
+      <div class="cards">
+        {
+          residencia.paraQuien.items.map((item) => (
+            <article class="card">
+              <h3>{item.titulo}</h3>
+              <p>{item.texto}</p>
+            </article>
+          ))
+        }
+      </div>
+      <blockquote>{residencia.cita}</blockquote>
+    </section>
+
+    <section class="wrap block">
+      <h2>{residencia.incluye.titulo}</h2>
+      <p>{residencia.incluye.intro}</p>
+      <div class="cards">
+        {
+          residencia.incluye.items.map((item) => (
+            <article class="card">
+              <h3>{item.titulo}</h3>
+              <p>{item.texto}</p>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="wrap block">
+      <h2>Costo</h2>
+      <p>{residencia.precioTexto}</p>
+    </section>
+
+    <section class="wrap block">
+      <h2>{residencia.cotidianidad.titulo}</h2>
+      <p>{residencia.cotidianidad.intro}</p>
+      <div class="two">
+        <article class="card">
+          <h3>Estructura del día</h3>
+          <ul class="checklist">
+            {residencia.cotidianidad.estructura.map((item) => <li>{item}</li>)}
+          </ul>
+        </article>
+        <article class="card">
+          <h3>El trabajo con cada persona</h3>
+          <ul class="checklist">
+            {residencia.cotidianidad.subjetivo.map((item) => <li>{item}</li>)}
+          </ul>
+        </article>
+      </div>
+      <blockquote>{residencia.citaRutina}</blockquote>
+    </section>
+
+    <section class="wrap block">
+      <h2>{residencia.familia.titulo}</h2>
+      <p>{residencia.familia.intro}</p>
+      <div class="cards">
+        {
+          residencia.familia.items.map((item) => (
+            <article class="card">
+              <h3>{item.titulo}</h3>
+              <p>{item.texto}</p>
+            </article>
+          ))
+        }
+      </div>
+      <h3>Visitas</h3>
+      <p>
+        Las visitas se organizan en el horario que autoriza la clínica y pueden ajustarse según la evolución, el
+        reglamento vigente y el criterio de la clínica.
+      </p>
+    </section>
+
+    <section class="wrap block">
+      <h2>{residencia.reglas.titulo}</h2>
+      <p>{residencia.reglas.intro}</p>
+      <div class="two">
+        <article class="card">
+          <h3>Esenciales</h3>
+          <ul class="plain-list">
+            {residencia.reglas.esenciales.map((item) => <li>{item}</li>)}
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Pertenencias y alimentos</h3>
+          <ul class="plain-list">
+            {residencia.reglas.pertenencias.map((item) => <li>{item}</li>)}
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="wrap block">
+      <h2>{residencia.limites.titulo}</h2>
+      <p>{residencia.limites.intro}</p>
+      <div class="cards">
+        {
+          residencia.limites.items.map((item) => (
+            <article class="card">
+              <h3>{item.titulo}</h3>
+              <p>{item.texto}</p>
+            </article>
+          ))
+        }
+      </div>
+      <blockquote>{residencia.citaIngreso}</blockquote>
+    </section>
+
+    <section class="wrap block">
+      <h2>{residencia.avances.titulo}</h2>
+      <p>{residencia.avances.intro}</p>
+      <ul class="checklist">
+        {residencia.avances.items.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+
+    <section class="wrap block">
+      <h2>{residencia.equipo.titulo}</h2>
+      <ul class="checklist">
+        {residencia.equipo.items.map((item) => <li>{item}</li>)}
+      </ul>
+      <p>{copiaPublica.equipo}</p>
+    </section>
+
+    <section class="wrap block">
+      <h2>{residencia.pasos.titulo}</h2>
+      <ol class="steps">
+        {
+          residencia.pasos.items.map((paso) => (
+            <li>
+              <h3>{paso.titulo}</h3>
+              <p>{paso.texto}</p>
+            </li>
+          ))
+        }
+      </ol>
+      <p>{residencia.documentos}</p>
+    </section>
+
+    <div class="wrap">
+      <Gallery />
+    </div>
+
+    <div class="wrap">
+      <FaqList items={residencia.faqs} title="Dudas de familiares" />
+      <p class="note">{residencia.nota}</p>
+      <CtaBand title={residencia.cierre.titulo} text={residencia.cierre.texto} message={residencia.whatsappMessage} />
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,68 @@
+---
+import Base from "../layouts/Base.astro";
+import CtaBand from "../components/CtaBand.astro";
+import CtaRow from "../components/CtaRow.astro";
+import Photo from "../components/Photo.astro";
+import { consulta } from "../content/consulta";
+import { copiaPublica } from "../config/site";
+import psiquiatria from "../assets/images/psiquiatria.png";
+import psicologia from "../assets/images/psicologia.png";
+import psicoterapia from "../assets/images/psicoterapia.png";
+import medicina from "../assets/images/medicina.png";
+import type { ImageMetadata } from "astro";
+
+const imagenes: Record<string, ImageMetadata> = {
+  psiquiatria,
+  psicologia,
+  psicoterapia,
+  medicina,
+};
+---
+<Base
+  title={consulta.title}
+  description={consulta.description}
+  path="/consulta-externa"
+  whatsappMessage={consulta.whatsappMessage}
+>
+  <div class="page">
+    <header class="wrap">
+      <p class="eyebrow">{consulta.eyebrow}</p>
+      <h1>{consulta.h1}</h1>
+      <p class="lead">{consulta.lead}</p>
+      <p>{consulta.intro}</p>
+      <CtaRow message={consulta.whatsappMessage} primary="Agendar por WhatsApp" />
+    </header>
+
+    <section class="wrap block">
+      <h2>El equipo de consulta</h2>
+      <p>{consulta.enfoque}</p>
+      <p>{consulta.espacio}</p>
+      <div class="areas">
+        {
+          consulta.areas.map((area) => (
+            <article class="card">
+              <div class="frame">
+                <Photo src={imagenes[area.imagen]} alt={area.alt} sizes="(min-width: 720px) 480px, 100vw" />
+              </div>
+              <h3>{area.titulo}</h3>
+              <p>{area.texto}</p>
+            </article>
+          ))
+        }
+      </div>
+      <p>{copiaPublica.equipo}</p>
+    </section>
+
+    <section class="wrap block panel panel-accent">
+      <h2>Si hace falta más que una cita</h2>
+      <p>{consulta.residencia}</p>
+      <p>
+        <a href="/residencia-puertas-abiertas">Conozca la residencia de puertas abiertas</a>
+      </p>
+    </section>
+
+    <div class="wrap">
+      <CtaBand title={consulta.cierre.titulo} text={consulta.cierre.texto} message={consulta.whatsappMessage} />
+    </div>
+  </div>
+</Base>

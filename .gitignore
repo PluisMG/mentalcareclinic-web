@@ -1,14 +1,31 @@
-node_modules/
+# build output
 dist/
+dist-analitica/
+.wrangler/
+# generated types
 .astro/
+worker-configuration.d.ts
 
-.env
-.env.*
-!.env.example
+# dependencies
+node_modules/
 
-src/assets/no-publicar/
-uploads/
-
-.DS_Store
-.idea/
+# logs
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# environment variables
+.env
+.env.production
+.env.local
+
+# material de trabajo, no es el sitio
+/uploads/
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
