@@ -22,7 +22,7 @@ npm run build
 npm run preview
 ```
 
-`npm run build` deja el sitio en `dist/`. `npm run verificar` revisa enlaces internos, un solo `h1`, canónicas, WhatsApp con lada 52 y los marcadores pendientes.
+`npm run build` deja el sitio en `dist/` y corre la verificación: marcadores, enlaces internos y los 301 del Worker.
 
 ## Dónde se edita cada cosa
 
@@ -38,23 +38,24 @@ npm run preview
 | Aviso de privacidad | `src/content/privacidad.ts` |
 | Colores y tipografía | `src/styles/global.css` |
 | Fotos nuevas | `src/assets/images/` y el componente que las usa |
+| Rutas viejas (`/inicio`, `/erpa`, `/erep`) | `worker/redirects.mjs` |
 
 El teléfono de llamada es `961 369 2795` (`tel:+529613692795`). El de WhatsApp es `961 100 3707` y todos los enlaces salen de `whatsappHref()` hacia `https://wa.me/529611003707`, con un mensaje distinto por página.
 
-## Cómo desplegar en Cloudflare Pages
+## Cómo se desplegaría en Cloudflare
 
-No hay credenciales en este repositorio y no hay que tocar el dominio ni el DNS desde aquí.
+No hay credenciales en este repositorio. `wrangler.jsonc` no trae `account_id`, `routes` ni dominio, y `workers_dev` está en `false`. Por eso un despliegue no apunta el DNS ni publica `workers.dev`. No se despliega desde aquí: hace falta que Pedro lo apruebe y que alguien, con la cuenta de Cloudflare ya autenticada, corra los comandos.
 
-1. En Cloudflare Pages, crear un proyecto con este repositorio.
-2. Comando de compilación: `npm run build`.
-3. Directorio de salida: `dist`.
-4. El archivo `wrangler.toml` ya declara `pages_build_output_dir = "dist"`.
-5. `public/_redirects` manda las rutas viejas con 301:
+1. Compilar: `npm run build`. La salida queda en `dist/`.
+2. Publicar el Worker y los assets juntos: `npx wrangler deploy`. Si cambian los bindings, `npm run cf-types` regenera `worker-configuration.d.ts`. Ese archivo no se versiona.
+3. El dominio `www` no se engancha solo. Cuando Pedro lo apruebe, el dominio se añade en el panel o con una ruta explícita. Ese paso sí toca DNS y no forma parte de este repositorio.
+4. Las rutas viejas responden 301 desde `worker/index.ts`, que copia `url.search`. Así se conservan `utm_source`, `utm_medium` y el resto de la consulta:
    - `/inicio` y `/inicio/` → `/`
    - `/erpa` y `/erpa/` → `/residencia-puertas-abiertas`
    - `/erep` y `/erep/` → `/estabilizacion`
-   El formato de `_redirects` no admite query parameters (Cloudflare lo marca como no soportado), así que estos 301 no conservan `utm` ni el resto de `url.search`. Para conservarlos hace falta un Worker que redirija con `url.search`. Ese Worker no está en el repositorio y no se despliega desde aquí. El comentario de `public/_redirects` deja el esquema.
-6. `public/_headers` agrega cabeceras básicas de seguridad.
+   La lista vive solo en `worker/redirects.mjs`. No hay `_redirects`: ese archivo no admite query parameters y perdería la campaña. Astro sigue generando el HTML de respaldo para `npm run preview`, desde el mismo módulo; esa vista local no es el 301.
+5. `public/_headers` agrega las cabeceras de seguridad a los assets. El Worker las copia en el 301, porque esa respuesta no pasa por los assets.
+6. `html_handling` es `drop-trailing-slash`, igual que `trailingSlash: "never"` de Astro: `/contacto` responde 200 y `/contacto/` vuelve a `/contacto`. `not_found_handling` es `404-page`, el equivalente de la `404.html` que Pages habría detectado solo.
 7. `robots.txt` y `sitemap.xml` se generan en el build. En producción permiten el rastreo y el sitemap apunta a `https://www.mentalcareclinic.com`.
 
 ## Vista previa (`PREVIEW=1`)
@@ -65,12 +66,14 @@ Para una copia que no debe indexarse (por ejemplo una vista previa en Cloudflare
 PREVIEW=1 npm run build
 ```
 
-Solo en ese caso el HTML de todas las páginas lleva `<meta name="robots" content="noindex">` y `robots.txt` queda en:
+Solo en ese caso el HTML de todas las páginas lleva `<meta name="robots" content="noindex">`, `dist/_headers` recibe `X-Robots-Tag: noindex` y `robots.txt` queda en:
 
 ```
 User-agent: *
 Disallow: /
 ```
+
+`public/_headers` no lleva esa cabecera. Para que el 301 del Worker también la envíe, la vista previa local es `npx wrangler dev --var PREVIEW:1` después de ese build. Un despliegue de vista previa, solo si Pedro lo aprueba, sería el mismo build y `npx wrangler deploy --var PREVIEW:1`. En `wrangler.jsonc` la variable queda vacía: producción no manda `noindex`.
 
 Sin `PREVIEW=1`, el build de producción sigue siendo rastreable (`Allow: /` y el sitemap). Las canónicas, el sitemap y Open Graph no cambian: siguen en `https://www.mentalcareclinic.com`. No ponga `PREVIEW=1` en el proyecto de producción.
 
@@ -82,7 +85,7 @@ Por defecto no se carga nada: no hay cookies de analítica ni píxel.
 
 Para activarla, en el build tiene que existir un ID válido. Sirven las dos vías; si la variable de entorno trae valor, gana sobre el archivo.
 
-1. Variable de entorno en Cloudflare Pages (o en un `.env` local, a partir de `.env.example`):
+1. Variable de entorno en Cloudflare (o en un `.env` local, a partir de `.env.example`):
    - `PUBLIC_GA4_ID` con forma `G-XXXXXXXX`
    - `PUBLIC_META_PIXEL_ID` solo dígitos
 2. O pegar los mismos valores en `analiticaEnArchivo`, dentro de `src/config/site.ts`.

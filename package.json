@@ -9,12 +9,17 @@
   "scripts": {
     "prebuild": "node scripts/og.mjs",
     "dev": "astro dev --host 127.0.0.1 --port 43123",
-    "build": "astro build && node scripts/verificar.mjs",
+    "build": "astro build && node scripts/encabezado-preview.mjs && npm run verificar",
     "preview": "astro preview --host 127.0.0.1 --port 43123",
-    "verificar": "node scripts/verificar.mjs",
+    "verificar": "node scripts/verificar.mjs && npm run verificar:redirects",
+    "verificar:redirects": "node scripts/verificar-redirects.mjs",
+    "cf-types": "wrangler types --strict-vars false",
     "astro": "astro"
   },
   "dependencies": {
     "astro": "^7.4.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.153.0"
   }
 }

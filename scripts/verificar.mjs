@@ -1,5 +1,6 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
+import { redirecciones, rutasDelWorker } from "../worker/redirects.mjs";
 
 const root = path.resolve("dist");
 const errors = [];
@@ -143,18 +144,40 @@ for (const file of distFiles) {
 if (joined.includes("Lee la historia")) fail("Quedó el texto «Lee la historia»");
 if (joined.includes("/aviso-de-privacidad")) fail("Quedó un enlace al aviso de privacidad");
 
-const redirects = await readFile("public/_redirects", "utf8");
-for (const line of redirects.split("\n")) {
-  const trimmed = line.trim();
-  if (!trimmed || trimmed.startsWith("#")) continue;
-  const parts = trimmed.split(/\s+/);
-  if (parts.length < 3 || parts.at(-1) !== "301") fail(`Redirección mal formada: ${trimmed}`);
-  const target = parts[1];
-  const candidates = resolveInternal(target);
+if (await exists("public/_redirects")) {
+  fail("public/_redirects no debe existir: las redirecciones viven en worker/redirects.mjs");
+}
+if (await exists(path.join(root, "_redirects"))) {
+  fail("dist/_redirects no debe existir: ese formato no conserva el query string");
+}
+for (const { origen, destino } of redirecciones) {
+  if (!origen.startsWith("/") || !destino.startsWith("/")) fail(`Ruta de redirección inválida: ${origen} → ${destino}`);
+  const candidates = resolveInternal(destino);
   const list = Array.isArray(candidates) ? candidates : [candidates];
   const ok = await Promise.all(list.map((item) => exists(item)));
-  if (!ok.some(Boolean)) fail(`_redirects apunta a ${target}, que no está en dist`);
+  if (!ok.some(Boolean)) fail(`${origen} apunta a ${destino}, que no está en dist`);
 }
+const config = JSON.parse(
+  (await readFile("wrangler.jsonc", "utf8")).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, ""),
+);
+const rutas = config.assets?.run_worker_first;
+if (JSON.stringify(rutas) !== JSON.stringify(rutasDelWorker())) {
+  fail("run_worker_first no coincide con worker/redirects.mjs");
+}
+if (config.assets?.directory !== "./dist" || config.assets?.binding !== "ASSETS") {
+  fail("Los assets deben usar directory ./dist y binding ASSETS");
+}
+if (config.assets?.html_handling !== "drop-trailing-slash" || config.assets?.not_found_handling !== "404-page") {
+  fail("html_handling o not_found_handling no coinciden con el sitio");
+}
+if (config.name !== "mentalcareclinic") fail("El nombre del Worker debe seguir siendo neutro");
+if ("account_id" in config || "routes" in config || "route" in config) {
+  fail("wrangler.jsonc no debe traer account_id ni routes");
+}
+if (config.workers_dev !== false) fail("workers_dev debe quedar en false: no hay dominio");
+if (config.vars?.PREVIEW === "1") fail("PREVIEW=1 no puede quedar fijo en wrangler.jsonc");
+const headersPublicos = await readFile("public/_headers", "utf8");
+if (headersPublicos.includes("X-Robots-Tag")) fail("public/_headers no debe llevar X-Robots-Tag");
 
 const sitemapPath = path.join(root, "sitemap.xml");
 if (!(await exists(sitemapPath))) fail("Falta dist/sitemap.xml");
@@ -184,6 +207,14 @@ if (esPreview) {
   }
 } else if (!robots.includes("Sitemap: https://www.mentalcareclinic.com/sitemap.xml")) {
   fail("robots.txt no declara el sitemap");
+}
+const headersDist = await readFile(path.join(root, "_headers"), "utf8");
+if (esPreview) {
+  if (!headersDist.includes("X-Robots-Tag: noindex")) {
+    fail("La vista previa debe añadir X-Robots-Tag: noindex en dist/_headers");
+  }
+} else if (headersDist.includes("X-Robots-Tag")) {
+  fail("dist/_headers de producción no debe llevar X-Robots-Tag");
 }
 
 const altPatio =
