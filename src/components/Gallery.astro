@@ -1,0 +1,51 @@
+---
+import Marker from "./Marker.astro";
+import Photo from "./Photo.astro";
+import { pendientes } from "../config/site";
+import fachada from "../assets/images/fachada.png";
+import consultorio from "../assets/images/consultorio.jpg";
+import habitacion from "../assets/images/habitacion.png";
+import patio from "../assets/images/patio-grupal.jpg";
+import taller from "../assets/images/taller.jpg";
+
+const fotos = [
+  {
+    src: patio,
+    alt: "Sesión grupal en el patio de MentalCareClinic, con los rostros de los residentes difuminados",
+  },
+  {
+    src: fachada,
+    alt: "Estancia Residencial de Puertas Abiertas (ERPA): casa de MentalCareClinic en Tuxtla Gutiérrez",
+  },
+  {
+    src: consultorio,
+    alt: "Consultorio de atención personalizada en MentalCareClinic",
+  },
+  {
+    src: habitacion,
+    alt: "Habitación individual de la estancia residencial de MentalCareClinic",
+  },
+  {
+    src: taller,
+    alt: "Pintura hecha en el taller de arte de la estancia residencial",
+  },
+];
+---
+<section class="block" id="instalaciones">
+  <h2>Instalaciones</h2>
+  <p>
+    Se muestran la casa, un consultorio, una habitación, una pieza del taller y una sesión grupal en el patio.
+    En esa sesión, los rostros de los residentes están difuminados.
+  </p>
+  <p>Sigue faltando un recorrido en video y fotos de más espacios.</p>
+  <Marker text={pendientes.recorrido} />
+  <div class="gallery">
+    {
+      fotos.map((foto) => (
+        <figure class="frame">
+          <Photo src={foto.src} alt={foto.alt} sizes="(min-width: 800px) 480px, 100vw" />
+        </figure>
+      ))
+    }
+  </div>
+</section>

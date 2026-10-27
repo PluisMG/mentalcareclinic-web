@@ -1,0 +1,122 @@
+---
+import Base from "../layouts/Base.astro";
+import CtaBand from "../components/CtaBand.astro";
+import CtaRow from "../components/CtaRow.astro";
+import FaqList from "../components/FaqList.astro";
+import Gallery from "../components/Gallery.astro";
+import Marker from "../components/Marker.astro";
+import { estabilizacion } from "../content/estabilizacion";
+import { pendientes } from "../config/site";
+---
+<Base
+  title={estabilizacion.title}
+  description={estabilizacion.description}
+  path="/estabilizacion"
+  whatsappMessage={estabilizacion.whatsappMessage}
+>
+  <div class="page">
+    <header class="wrap">
+      <p class="eyebrow">{estabilizacion.eyebrow}</p>
+      <h1>{estabilizacion.h1}</h1>
+      <p class="lead">{estabilizacion.lead}</p>
+      <p>{estabilizacion.definicion}</p>
+      <p><strong>{estabilizacion.duracion}</strong></p>
+      <CtaRow message={estabilizacion.whatsappMessage} />
+    </header>
+
+    <section class="wrap block prose">
+      <h2>Para qué sirve</h2>
+      <p>{estabilizacion.objetivo}</p>
+      <ul class="checklist">
+        {estabilizacion.busca.map((item) => <li>{item}</li>)}
+      </ul>
+      <p>{estabilizacion.noCura}</p>
+    </section>
+
+    <section class="wrap block">
+      <h2>Qué incluye</h2>
+      <div class="cards">
+        {
+          estabilizacion.incluye.map((item) => (
+            <article class="card">
+              <h3>{item.titulo}</h3>
+              <p>{item.texto}</p>
+            </article>
+          ))
+        }
+      </div>
+      <p>{estabilizacion.actividades}</p>
+    </section>
+
+    <section class="wrap block">
+      <h2>Costo</h2>
+      <p>{estabilizacion.precioTexto}</p>
+      <Marker text={pendientes.precioDesde} />
+    </section>
+
+    <section class="wrap block two">
+      <article>
+        <h2>Qué se observa</h2>
+        <ul class="checklist">
+          {estabilizacion.seObserva.map((item) => <li>{item}</li>)}
+        </ul>
+      </article>
+      <article>
+        <h2>Qué se espera al salir</h2>
+        <ul class="checklist">
+          {estabilizacion.metas.map((item) => <li>{item}</li>)}
+        </ul>
+      </article>
+    </section>
+
+    <section class="wrap block">
+      <h2>La familia</h2>
+      <ul class="checklist">
+        {estabilizacion.familia.map((item) => <li>{item}</li>)}
+      </ul>
+      <p>{estabilizacion.familiaNota}</p>
+      <p>{estabilizacion.mensaje}</p>
+    </section>
+
+    <section class="wrap block">
+      <h2>Qué no sustituye</h2>
+      <ul class="plain-list">
+        {estabilizacion.noSustituye.map((item) => <li>{item}</li>)}
+      </ul>
+      <p>{estabilizacion.ajustes}</p>
+    </section>
+
+    <section class="wrap block two">
+      <article class="card">
+        <h2>Cuándo se considera el egreso</h2>
+        <ul class="checklist">
+          {estabilizacion.egreso.map((item) => <li>{item}</li>)}
+        </ul>
+        <p>{estabilizacion.egresoTambien}</p>
+      </article>
+      <article class="card">
+        <h2>Lo que sigue</h2>
+        <ul class="checklist">
+          {estabilizacion.continuidad.map((item) => <li>{item}</li>)}
+        </ul>
+        <p>
+          Si después de estabilizarse hace falta una residencia abierta y de más tiempo, se valora la
+          <a href="/residencia-puertas-abiertas">residencia de puertas abiertas</a>.
+        </p>
+      </article>
+    </section>
+
+    <section class="wrap block">
+      <h2>Equipo</h2>
+      <p>Psiquiatría, medicina general, enfermería, apoyo psicológico y la familia trabajan sobre el mismo plan.</p>
+      <Marker text={pendientes.equipo} />
+    </section>
+
+    <div class="wrap">
+      <Gallery />
+      <FaqList items={estabilizacion.faqs} />
+      <p class="note">{estabilizacion.nota}</p>
+      <CtaBand title={estabilizacion.cierre.titulo} text={estabilizacion.cierre.texto} message={estabilizacion.whatsappMessage} />
+    </div>
+  </div>
+</Base>

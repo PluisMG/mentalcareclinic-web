@@ -1,0 +1,8 @@
+# Rutas del sitio anterior (Google Sites) hacia las rutas nuevas.
+# Cloudflare Pages aplica estos 301 antes de servir los archivos.
+/inicio                      /                              301
+/inicio/                     /                              301
+/erpa                        /residencia-puertas-abiertas   301
+/erpa/                       /residencia-puertas-abiertas   301
+/erep                        /estabilizacion                301
+/erep/                       /estabilizacion                301

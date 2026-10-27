@@ -1,0 +1,85 @@
+---
+import Base from "../layouts/Base.astro";
+import Icon from "../components/Icon.astro";
+import Marker from "../components/Marker.astro";
+import { contacto } from "../content/contacto";
+import { mapaExternoHref, pendientes, site, whatsappHref } from "../config/site";
+---
+<Base
+  title={contacto.title}
+  description={contacto.description}
+  path="/contacto"
+  whatsappMessage={contacto.whatsappMessage}
+>
+  <div class="page">
+    <header class="wrap">
+      <p class="eyebrow">{contacto.eyebrow}</p>
+      <h1>{contacto.h1}</h1>
+      <p class="lead">{contacto.lead}</p>
+      <p>{contacto.intro}</p>
+    </header>
+
+    <div class="wrap block two">
+      <section class="panel panel-accent">
+        <h2>Escribir o llamar</h2>
+        <ul class="contact-list">
+          <li>
+            <a href={whatsappHref(contacto.whatsappMessage)} data-track="whatsapp" target="_blank" rel="noopener noreferrer">
+              <Icon name="whatsapp" />
+              WhatsApp {site.whatsapp.display}
+              <span class="sr-only"> (se abre en otra pestaña)</span>
+            </a>
+          </li>
+          <li>
+            <a href={site.telefono.href} data-track="llamada">
+              <Icon name="phone" />
+              Llamar al {site.telefono.display}
+            </a>
+          </li>
+          <li>
+            <a href={site.emailHref}>
+              <Icon name="mail" />
+              {site.email}
+            </a>
+          </li>
+        </ul>
+        <p>{contacto.cierre}</p>
+      </section>
+
+      <section>
+        <h2>Dirección</h2>
+        <p>
+          <Icon name="pin" />
+          {site.direccion.ciudad}, {site.direccion.estado}
+        </p>
+        <Marker text={pendientes.direccion} />
+        <p>{site.direccion.entre}, {site.direccion.colonia}</p>
+        <Marker text={pendientes.codigoPostal} />
+        <h2>Horario</h2>
+        <Marker text={pendientes.horario} />
+        <h3>Visitas de la residencia</h3>
+        <p>{site.visitasErpa}</p>
+        <h2>Permiso sanitario</h2>
+        <Marker text={pendientes.cofepris} />
+      </section>
+    </div>
+
+    <section class="wrap block map-panel" data-map data-map-query={site.mapaConsulta}>
+      <h2>Mapa</h2>
+      <p>{contacto.mapaNota}</p>
+      <Marker text={pendientes.coordenadas} />
+      <p>
+        El mapa de Google no se carga solo. Así esta página sigue siendo rápida y no comparte datos con Google hasta
+        que usted lo pide.
+      </p>
+      <div class="cta-row">
+        <button type="button" class="btn btn-primary" data-load-map>Mostrar mapa</button>
+        <a class="btn btn-ghost" href={mapaExternoHref()} target="_blank" rel="noopener noreferrer">
+          Abrir en Google Maps
+          <span class="sr-only"> (se abre en otra pestaña)</span>
+        </a>
+      </div>
+      <div data-map-slot hidden></div>
+    </section>
+  </div>
+</Base>

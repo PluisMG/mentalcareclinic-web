@@ -1,0 +1,26 @@
+---
+import Icon from "./Icon.astro";
+import { site, whatsappHref } from "../config/site";
+
+interface Props {
+  message: string;
+  primary?: string;
+  secondary?: string;
+}
+const {
+  message,
+  primary = "Escribir por WhatsApp",
+  secondary = `Llamar al ${site.telefono.display}`,
+} = Astro.props;
+---
+<div class="cta-row">
+  <a class="btn btn-primary" href={whatsappHref(message)} data-track="whatsapp" target="_blank" rel="noopener noreferrer">
+    <Icon name="whatsapp" />
+    {primary}
+    <span class="sr-only"> (se abre en otra pestaña)</span>
+  </a>
+  <a class="btn btn-ghost" href={site.telefono.href} data-track="llamada">
+    <Icon name="phone" />
+    {secondary}
+  </a>
+</div>

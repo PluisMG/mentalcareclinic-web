@@ -1,0 +1,51 @@
+---
+import Base from "../layouts/Base.astro";
+import CtaBand from "../components/CtaBand.astro";
+import { historia } from "../content/historia";
+---
+<Base
+  title={historia.title}
+  description={historia.description}
+  path="/historia"
+  whatsappMessage={historia.whatsappMessage}
+>
+  <div class="page">
+    <header class="wrap prose">
+      <p class="eyebrow">{historia.eyebrow}</p>
+      <h1>{historia.h1}</h1>
+      <p class="lead">{historia.lead}</p>
+      <p>{historia.intro}</p>
+    </header>
+
+    <section class="wrap block">
+      <h2>De Clínica AT a MentalCareClinic</h2>
+      <ol class="timeline">
+        {
+          historia.hitos.map((hito) => (
+            <li>
+              <h3>{hito.cuando}</h3>
+              <p>{hito.texto}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="wrap block prose">
+      <h2>Límites que también son cuidado</h2>
+      <p>{historia.limites}</p>
+      <h2>{historia.persona.titulo}</h2>
+      <p>{historia.persona.texto}</p>
+      <blockquote>{historia.cierrePregunta}</blockquote>
+      <p>{historia.cierreTexto}</p>
+    </section>
+
+    <div class="wrap">
+      <CtaBand
+        title="Conocer la residencia"
+        text="Si llegaron hasta aquí buscando un lugar para un familiar, empiecen por la residencia de puertas abiertas."
+        message={historia.whatsappMessage}
+      />
+    </div>
+  </div>
+</Base>
