@@ -53,8 +53,8 @@ No hay credenciales en este repositorio. `wrangler.jsonc` no trae `account_id`, 
    - `/inicio` y `/inicio/` → `/`
    - `/erpa` y `/erpa/` → `/residencia-puertas-abiertas`
    - `/erep` y `/erep/` → `/estabilizacion`
-   La lista vive solo en `worker/redirects.mjs`. No hay `_redirects`: ese archivo no admite query parameters y perdería la campaña. Astro sigue generando el HTML de respaldo para `npm run preview`, desde el mismo módulo; esa vista local no es el 301.
-5. `public/_headers` agrega las cabeceras de seguridad a los assets. El Worker las copia en el 301, porque esa respuesta no pasa por los assets.
+   La lista vive solo en `worker/redirects.mjs`. `public/_redirects` y el comentario que anunciaba un Worker ausente se quitaron: el 301 lo hace el Worker y conserva la consulta. Astro sigue generando el HTML de respaldo para `npm run preview`, desde el mismo módulo; esa vista local no es el 301.
+5. `public/_headers` agrega las cabeceras de seguridad a los assets. El build añade una `Content-Security-Policy` con hashes del HTML, sin `unsafe-eval` ni `unsafe-inline`. El Worker copia esas cabeceras y la misma CSP en el 301.
 6. `html_handling` es `drop-trailing-slash`, igual que `trailingSlash: "never"` de Astro: `/contacto` responde 200 y `/contacto/` vuelve a `/contacto`. `not_found_handling` es `404-page`, el equivalente de la `404.html` que Pages habría detectado solo.
 7. `robots.txt` y `sitemap.xml` se generan en el build. En producción permiten el rastreo y el sitemap apunta a `https://www.mentalcareclinic.com`.
 
@@ -79,25 +79,15 @@ Sin `PREVIEW=1`, el build de producción sigue siendo rastreable (`Allow: /` y e
 
 La redirección del dominio sin `www` se hace en el registrador (Squarespace Domains), no en este sitio. Hoy `https://mentalcareclinic.com` no tiene certificado. No se modificó el DNS.
 
-## Analítica (GA4 y Meta)
+## Analítica (solo GA4, con consentimiento)
 
-Por defecto no se carga nada: no hay cookies de analítica ni píxel.
+Por defecto no se carga nada: `.env.example` deja `PUBLIC_GA4_ID` vacío y el repositorio no guarda ningún ID. No hay píxel de Meta, remarketing ni otras etiquetas.
 
-Para activarla, en el build tiene que existir un ID válido. Sirven las dos vías; si la variable de entorno trae valor, gana sobre el archivo.
+Para activarla, el build tiene que recibir `PUBLIC_GA4_ID` con forma `G-XXXXXXXX`. El sitio es estático: cambiar el ID pide un build nuevo. Sin esa variable no aparece el aviso ni hay medición.
 
-1. Variable de entorno en Cloudflare (o en un `.env` local, a partir de `.env.example`):
-   - `PUBLIC_GA4_ID` con forma `G-XXXXXXXX`
-   - `PUBLIC_META_PIXEL_ID` solo dígitos
-2. O pegar los mismos valores en `analiticaEnArchivo`, dentro de `src/config/site.ts`.
+Si el ID es válido, un aviso de cookies ofrece Aceptar y Rechazar con el mismo peso visual. La decisión se guarda en el navegador y el pie tiene «Cambiar la decisión de cookies». Antes de aceptar no se pide nada a Google. Consent Mode v2 arranca con todo en `denied`. `ad_storage`, `ad_user_data` y `ad_personalization` se quedan en `denied`. `allow_google_signals` queda en `false`. Tras aceptar, solo `analytics_storage` pasa a `granted`.
 
-El sitio es estático: cambiar un ID pide un build nuevo.
-
-Si hay al menos un ID, aparece un aviso de cookies. Google Analytics y el píxel de Meta se cargan solo después de pulsar Aceptar. Rechazar no carga nada. La decisión se guarda en el navegador. Los eventos, con nombres neutros y sin datos de salud, son:
-
-- `contacto_whatsapp` (en Meta, evento personalizado `ContactoWhatsapp`)
-- `contacto_llamada` (en Meta, `ContactoLlamada`)
-
-Meta puede limitar eventos en sitios de salud. No se envía el texto del mensaje ni información clínica. En GA4 se desactivan las señales publicitarias de Google.
+Los eventos, solo con consentimiento, son `contacto_whatsapp` (cualquier enlace a wa.me) y `contacto_llamada` (cualquier enlace `tel:`). No se envía el texto del mensaje ni información clínica. El aviso no enlaza al aviso de privacidad, que sigue sin publicarse.
 
 ## Rutas
 

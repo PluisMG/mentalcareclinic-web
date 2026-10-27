@@ -2,7 +2,6 @@
 import "../styles/global.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-import Icon from "../components/Icon.astro";
 import {
   analitica,
   canonical,
@@ -10,7 +9,6 @@ import {
   esVistaPrevia,
   hayAnalitica,
   site,
-  whatsappHref,
 } from "../config/site";
 
 interface Props {
@@ -59,39 +57,29 @@ const ogImage = `${site.url}${site.ogImage}`;
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script type="application/ld+json" set:html={json} />
   </head>
-  <body data-ga4={analitica.ga4 || undefined} data-meta={analitica.metaPixel || undefined}>
+  <body data-ga4={analitica.ga4 || undefined}>
     <a class="skip" href="#contenido">Saltar al contenido</a>
     <Header message={whatsappMessage} />
     <main id="contenido">
       <slot />
     </main>
     <Footer message={whatsappMessage} />
-    <a
-      class="float"
-      href={whatsappHref(whatsappMessage)}
-      data-track="whatsapp"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      <Icon name="whatsapp" />
-      WhatsApp
-      <span class="sr-only"> (se abre en otra pestaña)</span>
-    </a>
     {
       hayAnalitica() && (
-        <div id="consent" class="consent" hidden>
+        <div id="consent" class="consent" role="region" aria-labelledby="consent-title" hidden>
           <div class="consent-copy">
-            <p id="consent-title">Cookies de analítica</p>
+            <p id="consent-title">Medición de visitas</p>
             <p>
-              Si acepta, medimos visitas y clics de contacto con Google Analytics y Meta. No enviamos datos de salud.
-              Si rechaza, esas herramientas no se cargan.
+              Si acepta, Google Analytics cuenta las páginas que ve y los clics en WhatsApp o en el teléfono, para
+              saber si el sitio ayuda a las familias a pedir una cita. No enviamos datos de salud ni usamos
+              publicidad. Si rechaza, esa medición no se carga.
             </p>
           </div>
           <div class="consent-actions">
-            <button type="button" class="btn btn-primary btn-small" id="consent-accept">
+            <button type="button" class="btn btn-choice" id="consent-accept">
               Aceptar
             </button>
-            <button type="button" class="btn btn-ghost btn-small" id="consent-reject">
+            <button type="button" class="btn btn-choice" id="consent-reject">
               Rechazar
             </button>
           </div>

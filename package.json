@@ -9,10 +9,12 @@
   "scripts": {
     "prebuild": "node scripts/og.mjs",
     "dev": "astro dev --host 127.0.0.1 --port 43123",
-    "build": "astro build && node scripts/encabezado-preview.mjs && npm run verificar",
+    "build": "astro build && node scripts/encabezado-preview.mjs && node scripts/csp.mjs && npm run verificar",
     "preview": "astro preview --host 127.0.0.1 --port 43123",
-    "verificar": "node scripts/verificar.mjs && npm run verificar:redirects",
+    "verificar": "node scripts/verificar.mjs && npm run verificar:redirects && npm run verificar:analitica && npm run verificar:accesibilidad",
     "verificar:redirects": "node scripts/verificar-redirects.mjs",
+    "verificar:analitica": "node scripts/verificar-analitica.mjs",
+    "verificar:accesibilidad": "node scripts/verificar-accesibilidad.mjs",
     "cf-types": "wrangler types --strict-vars false",
     "astro": "astro"
   },
@@ -20,6 +22,8 @@
     "astro": "^7.4.2"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "playwright-core": "^1.64.1",
     "wrangler": "^4.153.0"
   }
 }

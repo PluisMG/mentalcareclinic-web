@@ -1,3 +1,4 @@
+import { politicaCsp } from "./csp-valor.mjs";
 import { destinoDe } from "./redirects.mjs";
 
 /** Mismos valores que `public/_headers`. El 301 no pasa por los assets, así que hay que copiarlos. */
@@ -10,6 +11,7 @@ const SEGURIDAD = [
     "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()",
   ],
   ["Strict-Transport-Security", "max-age=31536000"],
+  ["Content-Security-Policy", politicaCsp],
 ] as const;
 
 function encabezadosDeRedireccion(location: string, preview: boolean): Headers {

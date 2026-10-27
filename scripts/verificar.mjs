@@ -142,6 +142,13 @@ for (const file of distFiles) {
   }
 }
 if (joined.includes("Lee la historia")) fail("Quedó el texto «Lee la historia»");
+if (joined.includes("El número del predio")) fail("Quedó la nota interna del mapa");
+if (joined.includes("facebook.net") || joined.includes("fbq(") || joined.includes("fbevents")) {
+  fail("Quedó el píxel de Meta");
+}
+if (joined.includes('id="consent"') || joined.includes("data-ga4=")) {
+  fail("Sin PUBLIC_GA4_ID no debe haber aviso ni identificador de analítica");
+}
 if (joined.includes("/aviso-de-privacidad")) fail("Quedó un enlace al aviso de privacidad");
 
 if (await exists("public/_redirects")) {
@@ -209,6 +216,13 @@ if (esPreview) {
   fail("robots.txt no declara el sitemap");
 }
 const headersDist = await readFile(path.join(root, "_headers"), "utf8");
+const csp = headersDist.match(/^\s*Content-Security-Policy:\s*(.+)$/m)?.[1] ?? "";
+if (!csp.includes("script-src") || !csp.includes("frame-src https://www.google.com")) {
+  fail("Falta la Content-Security-Policy en dist/_headers");
+}
+if (csp.includes("unsafe-eval") || csp.includes("unsafe-inline")) {
+  fail("La CSP no debe usar unsafe-eval ni unsafe-inline");
+}
 if (esPreview) {
   if (!headersDist.includes("X-Robots-Tag: noindex")) {
     fail("La vista previa debe añadir X-Robots-Tag: noindex en dist/_headers");

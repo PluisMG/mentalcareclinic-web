@@ -2,15 +2,9 @@
  * Datos de la clínica. Los textos de cada página están en src/content/.
  * `pendientes` guarda datos sin confirmar. No se interpolan en el HTML ni en el JSON-LD.
  *
- * Los IDs de analítica también pueden venir de variables de entorno en el build:
- * PUBLIC_GA4_ID y PUBLIC_META_PIXEL_ID. Si el entorno trae un valor, gana sobre
- * lo escrito abajo. Si no hay un ID válido, no se carga ningún script.
+ * La medición de visitas solo sale de PUBLIC_GA4_ID en el build. Si no viene,
+ * no hay aviso ni script de analítica. No hay píxel de Meta.
  */
-
-const analiticaEnArchivo = {
-  ga4: "",
-  metaPixel: "",
-};
 
 export const pendientes = {
   direccion: "[DIRECCIÓN POR CONFIRMAR: Av. 15 Norte #593 o #539]",
@@ -125,35 +119,29 @@ export const rutasPublicas = [
 ] as const;
 
 const GA4_RE = /^G-[A-Z0-9]+$/i;
-const META_RE = /^\d{8,20}$/;
 
-function leerEntorno(nombre: "PUBLIC_GA4_ID" | "PUBLIC_META_PIXEL_ID"): string {
-  const desdeProceso = process.env[nombre];
+function leerGa4(): string {
+  const desdeProceso = process.env.PUBLIC_GA4_ID;
   if (typeof desdeProceso === "string" && desdeProceso.trim()) return desdeProceso.trim();
-  if (nombre === "PUBLIC_GA4_ID") return (import.meta.env.PUBLIC_GA4_ID ?? "").trim();
-  return (import.meta.env.PUBLIC_META_PIXEL_ID ?? "").trim();
+  return (import.meta.env.PUBLIC_GA4_ID ?? "").trim();
 }
 
-function idLimpio(valor: string, regex: RegExp, nombre: string): string {
+function idGa4(valor: string): string {
   const limpio = valor.trim();
   if (!limpio) return "";
-  if (!regex.test(limpio)) {
-    console.warn(`[analítica] Se ignoró ${nombre} porque no tiene el formato esperado.`);
+  if (!GA4_RE.test(limpio)) {
+    console.warn("[analítica] Se ignoró PUBLIC_GA4_ID porque no tiene el formato esperado.");
     return "";
   }
   return limpio;
 }
 
-const ga4Crudo = leerEntorno("PUBLIC_GA4_ID") || analiticaEnArchivo.ga4;
-const metaCrudo = leerEntorno("PUBLIC_META_PIXEL_ID") || analiticaEnArchivo.metaPixel;
-
 export const analitica = {
-  ga4: idLimpio(ga4Crudo, GA4_RE, "PUBLIC_GA4_ID"),
-  metaPixel: idLimpio(metaCrudo, META_RE, "PUBLIC_META_PIXEL_ID"),
+  ga4: idGa4(leerGa4()),
 };
 
 export function hayAnalitica(): boolean {
-  return Boolean(analitica.ga4 || analitica.metaPixel);
+  return Boolean(analitica.ga4);
 }
 
 /** Vista previa: `PREVIEW=1 npm run build`. No indexa. Las canónicas no cambian. */

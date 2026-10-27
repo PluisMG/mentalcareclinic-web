@@ -25,6 +25,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-bottom: 6rem;
 }
 
 body {
@@ -403,6 +404,14 @@ a:hover {
   text-underline-offset: 0.15em;
 }
 
+main :where(p, li, blockquote) > a:not(.btn) {
+  display: inline-block;
+  min-width: 24px;
+  min-height: 24px;
+  padding-block: 3px;
+  line-height: 1.4;
+}
+
 .steps {
   counter-reset: paso;
   list-style: none;
@@ -594,7 +603,7 @@ blockquote {
 .site-footer {
   background: var(--forest-deep);
   color: #f4efe6;
-  padding: 2.2rem 0 6rem;
+  padding: 2.2rem 0 calc(7.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .site-footer a {
@@ -649,11 +658,12 @@ blockquote {
 .text-button {
   background: none;
   border: 0;
-  padding: 0;
+  padding: 0.35rem 0;
   color: inherit;
   font: inherit;
   text-decoration: underline;
   text-underline-offset: 0.15em;
+  min-width: 24px;
   min-height: 44px;
   cursor: pointer;
 }
@@ -710,6 +720,18 @@ body.has-consent .float {
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+}
+
+.btn-choice {
+  min-width: 9rem;
+  background: var(--card);
+  color: var(--forest);
+  border-color: var(--forest);
+}
+
+.btn-choice:hover {
+  background: rgba(27, 67, 50, 0.06);
+  color: var(--forest-deep);
 }
 
 .consent-actions a {
@@ -808,6 +830,10 @@ body.has-consent .float {
 
   .site-footer {
     padding-bottom: 2.2rem;
+  }
+
+  html {
+    scroll-padding-bottom: 0;
   }
 
   body:has(.consent:not([hidden])) {

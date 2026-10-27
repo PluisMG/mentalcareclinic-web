@@ -158,6 +158,19 @@ async function revisar(preview) {
     const recibido = redireccion.headers.get(nombre);
     if (recibido !== valor) fail(`/erpa: el 301 no copia ${nombre} (llegó ${recibido})`);
   }
+
+  const csp = (await readFile("dist/_headers", "utf8")).match(/^\s*Content-Security-Policy:\s*(.+)$/m)?.[1] ?? "";
+  if (!csp || csp.includes("unsafe-eval") || csp.includes("unsafe-inline")) {
+    fail("La CSP de dist/_headers no es válida");
+  }
+  for (const [ruta, respuesta] of [
+    ["/", inicio],
+    ["/erpa", redireccion],
+  ]) {
+    if (respuesta.headers.get("content-security-policy") !== csp) {
+      fail(`${ruta}: la CSP no coincide con dist/_headers`);
+    }
+  }
 }
 
 const headers = await readFile("public/_headers", "utf8");
