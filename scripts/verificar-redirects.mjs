@@ -117,20 +117,30 @@ function ubicacionEsperada(destino) {
 }
 
 async function revisar(preview) {
-  for (const { origen: ruta, destino } of redirecciones) {
-    for (const variante of [ruta, `${ruta}/`]) {
-      const respuesta = await pedir(`${variante}${consulta}`);
-      const location = respuesta.headers.get("location");
-      if (respuesta.status !== 301) {
-        fail(`${variante}: se esperaba 301 y llegó ${respuesta.status}`);
-      }
-      if (location !== ubicacionEsperada(destino)) {
-        fail(`${variante}: Location «${location}» no conserva ${consulta} hacia ${destino}`);
-      }
-      const robots = respuesta.headers.get("x-robots-tag");
-      if (preview && robots !== "noindex") fail(`${variante}: con PREVIEW=1 falta X-Robots-Tag: noindex`);
-      if (!preview && robots) fail(`${variante}: producción no debe enviar X-Robots-Tag (${robots})`);
+  const variantes = redirecciones.flatMap(({ origen: ruta, destino }) => [
+    [ruta, destino],
+    [`${ruta}/`, destino],
+  ]);
+  variantes.push(
+    ["/ERPA", "/residencia-puertas-abiertas"],
+    ["/ERPA/", "/residencia-puertas-abiertas"],
+    ["/Erep", "/estabilizacion"],
+    ["/Erep/", "/estabilizacion"],
+    ["/INICIO", "/"],
+    ["/INICIO/", "/"],
+  );
+  for (const [variante, destino] of variantes) {
+    const respuesta = await pedir(`${variante}${consulta}`);
+    const location = respuesta.headers.get("location");
+    if (respuesta.status !== 301) {
+      fail(`${variante}: se esperaba 301 y llegó ${respuesta.status}`);
     }
+    if (location !== ubicacionEsperada(destino)) {
+      fail(`${variante}: Location «${location}» no conserva ${consulta} hacia ${destino}`);
+    }
+    const robots = respuesta.headers.get("x-robots-tag");
+    if (preview && robots !== "noindex") fail(`${variante}: con PREVIEW=1 falta X-Robots-Tag: noindex`);
+    if (!preview && robots) fail(`${variante}: producción no debe enviar X-Robots-Tag (${robots})`);
   }
 
   for (const pagina of paginas) {

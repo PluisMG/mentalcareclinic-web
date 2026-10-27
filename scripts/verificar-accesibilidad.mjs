@@ -70,6 +70,66 @@ try {
         else if (principal.loading === "lazy" || principal.prioridad !== "high") {
           fallar("/: la fachada (LCP) debe ir eager y con fetchpriority=high");
         }
+        if (vista.width >= 1080) {
+          const servida = await pagina.evaluate(async () => {
+            const img = document.querySelector("main img");
+            if (img.decode) await img.decode();
+            return {
+              muestra: Math.round(img.getBoundingClientRect().width),
+              natural: img.naturalWidth,
+            };
+          });
+          if (!servida.natural || servida.natural > 480) {
+            fallar(`/ escritorio: la fachada se sirve a ${servida.natural}px y se muestra a ${servida.muestra}px`);
+          }
+        }
+      }
+
+      const pedidos = {
+        "/": ["Conocer la residencia", "Pida una cita informativa"],
+        "/consulta-externa": ["Conozca la residencia"],
+      };
+      for (const texto of pedidos[ruta] ?? []) {
+        const medida = await pagina.evaluate((buscado) => {
+          const enlace = [...document.querySelectorAll("main a")].find((nodo) =>
+            (nodo.textContent ?? "").includes(buscado),
+          );
+          if (!enlace) return null;
+          const rect = enlace.getBoundingClientRect();
+          return { ancho: Math.round(rect.width), alto: Math.round(rect.height) };
+        }, texto);
+        if (!medida) fallar(`${ruta}: no está el enlace «${texto}»`);
+        else if (medida.ancho < 24 || medida.alto < 24) {
+          fallar(`${ruta} ${vista.nombre}: «${texto}» mide ${medida.ancho}×${medida.alto}`);
+        }
+      }
+
+      if (vista.width === 390 && (ruta === "/" || ruta === "/contacto")) {
+        const tapados = await pagina.evaluate(() => {
+          const flotante = document.querySelector(".float")?.getBoundingClientRect();
+          if (!flotante || flotante.width === 0) return ["falta el botón flotante"];
+          const objetivos = [];
+          const nota = document.querySelector(".fine");
+          if (nota) objetivos.push(["la nota de la cita", nota]);
+          const titulo = [...document.querySelectorAll("h2")].find((nodo) =>
+            nodo.textContent?.includes("Escribir o llamar"),
+          );
+          const tarjeta = titulo?.closest("section");
+          if (tarjeta) objetivos.push(["la tarjeta Escribir o llamar", tarjeta]);
+          const golpes = [];
+          for (const [nombre, nodo] of objetivos) {
+            const rect = nodo.getBoundingClientRect();
+            const cruza = !(
+              rect.bottom <= flotante.top + 1 ||
+              rect.top >= flotante.bottom - 1 ||
+              rect.right <= flotante.left + 1 ||
+              rect.left >= flotante.right - 1
+            );
+            if (cruza) golpes.push(nombre);
+          }
+          return golpes;
+        });
+        for (const nombre of tapados) fallar(`${ruta} móvil: el botón tapa ${nombre}`);
       }
     }
   }

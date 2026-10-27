@@ -11,6 +11,7 @@ const fotos = [
   {
     src: patio,
     alt: "Sesión grupal en el patio de MentalCareClinic, con los rostros de los residentes difuminados",
+    quality: 58,
   },
   {
     src: fachada,
@@ -37,7 +38,12 @@ const fotos = [
     {
       fotos.map((foto) => (
         <figure class="frame">
-          <Photo src={foto.src} alt={foto.alt} sizes="(min-width: 800px) 480px, 100vw" />
+          <Photo
+            src={foto.src}
+            alt={foto.alt}
+            sizes="(min-width: 800px) 480px, 100vw"
+            quality={"quality" in foto ? foto.quality : undefined}
+          />
         </figure>
       ))
     }

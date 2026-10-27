@@ -327,7 +327,7 @@ a:hover {
 }
 
 .page {
-  padding: 1.5rem 0 3.5rem;
+  padding: 0.6rem 0 calc(3.5rem + 5.75rem);
 }
 
 .eyebrow {
@@ -340,7 +340,8 @@ a:hover {
 }
 
 .lead {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
+  line-height: 1.45;
 }
 
 .position {
@@ -374,7 +375,7 @@ a:hover {
 }
 
 .block {
-  margin-top: 3rem;
+  margin-top: 1.4rem;
 }
 
 .card,
@@ -781,6 +782,17 @@ body.has-consent .float {
   margin-top: 2rem;
 }
 
+@media (max-width: 1079px) {
+  .page > header p,
+  .hero p {
+    margin-bottom: 0.55rem;
+  }
+
+  .position {
+    font-size: 1.22rem;
+  }
+}
+
 @media (min-width: 720px) {
   .cards,
   .areas,
@@ -820,6 +832,19 @@ body.has-consent .float {
 
   .header-actions {
     display: flex;
+  }
+
+  .page {
+    padding: 1.5rem 0 3.5rem;
+  }
+
+  .block {
+    margin-top: 3rem;
+  }
+
+  .lead {
+    font-size: 1.15rem;
+    line-height: 1.6;
   }
 
   .hero,

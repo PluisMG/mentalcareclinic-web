@@ -1,7 +1,8 @@
 /**
  * Única lista de redirecciones del sitio anterior (Google Sites).
  * La leen el Worker, la config de Astro y las pruebas.
- * No hay `_redirects`: ese formato no conserva el query string.
+ * `_redirects` no declara estas rutas: ese formato no conserva el query string.
+ * El Worker es el que responde 301 y conserva el query string.
  * @type {ReadonlyArray<{ readonly origen: string, readonly destino: string }>}
  */
 export const redirecciones = Object.freeze([
@@ -23,7 +24,13 @@ export function normalizarRuta(pathname) {
  * @returns {string | null}
  */
 export function destinoDe(pathname) {
-  const ruta = normalizarRuta(pathname);
+  let ruta = normalizarRuta(pathname);
+  try {
+    ruta = decodeURIComponent(ruta);
+  } catch {
+    /* La ruta ya venía sin un escape válido. */
+  }
+  ruta = ruta.toLowerCase();
   const regla = redirecciones.find((item) => item.origen === ruta);
   return regla ? regla.destino : null;
 }

@@ -53,7 +53,7 @@ No hay credenciales en este repositorio. `wrangler.jsonc` no trae `account_id`, 
    - `/inicio` y `/inicio/` → `/`
    - `/erpa` y `/erpa/` → `/residencia-puertas-abiertas`
    - `/erep` y `/erep/` → `/estabilizacion`
-   La lista vive solo en `worker/redirects.mjs`. `public/_redirects` y el comentario que anunciaba un Worker ausente se quitaron: el 301 lo hace el Worker y conserva la consulta. Astro sigue generando el HTML de respaldo para `npm run preview`, desde el mismo módulo; esa vista local no es el 301.
+   La lista vive solo en `worker/redirects.mjs`. La comparación no distingue mayúsculas: `/ERPA`, `/Erep` y `/INICIO` también responden 301. `public/_redirects` no declara rutas; el comentario dice que el Worker es el que conserva el query string. Astro sigue generando el HTML de respaldo para `npm run preview`, desde el mismo módulo; esa vista local no es el 301.
 5. `public/_headers` agrega las cabeceras de seguridad a los assets. El build añade una `Content-Security-Policy` con hashes del HTML, sin `unsafe-eval` ni `unsafe-inline`. El Worker copia esas cabeceras y la misma CSP en el 301.
 6. `html_handling` es `drop-trailing-slash`, igual que `trailingSlash: "never"` de Astro: `/contacto` responde 200 y `/contacto/` vuelve a `/contacto`. `not_found_handling` es `404-page`, el equivalente de la `404.html` que Pages habría detectado solo.
 7. `robots.txt` y `sitemap.xml` se generan en el build. En producción permiten el rastreo y el sitemap apunta a `https://www.mentalcareclinic.com`.

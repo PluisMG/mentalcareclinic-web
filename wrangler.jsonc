@@ -25,7 +25,8 @@
     // not_found_handling 404-page equivale a la 404.html que Pages detectaba solo.
     "html_handling": "drop-trailing-slash",
     "not_found_handling": "404-page",
-    // Solo las rutas viejas. El resto lo sirven los assets, con public/_headers.
-    "run_worker_first": ["/inicio", "/inicio/", "/erpa", "/erpa/", "/erep", "/erep/"]
+    // Todas las peticiones: el Worker compara /inicio, /erpa y /erep sin distinguir mayúsculas
+    // (/ERPA, /Erep, /INICIO) y, si no hay 301, delega en los assets.
+    "run_worker_first": true
   }
 }

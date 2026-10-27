@@ -1,6 +1,6 @@
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
-import { redirecciones, rutasDelWorker } from "../worker/redirects.mjs";
+import { redirecciones } from "../worker/redirects.mjs";
 
 const root = path.resolve("dist");
 const errors = [];
@@ -151,11 +151,17 @@ if (joined.includes('id="consent"') || joined.includes("data-ga4=")) {
 }
 if (joined.includes("/aviso-de-privacidad")) fail("Quedó un enlace al aviso de privacidad");
 
-if (await exists("public/_redirects")) {
-  fail("public/_redirects no debe existir: las redirecciones viven en worker/redirects.mjs");
-}
-if (await exists(path.join(root, "_redirects"))) {
-  fail("dist/_redirects no debe existir: ese formato no conserva el query string");
+for (const archivo of ["public/_redirects", path.join(root, "_redirects")]) {
+  if (!(await exists(archivo))) {
+    fail(`Falta ${archivo}: el comentario debe decir que el Worker conserva el query string`);
+    continue;
+  }
+  const texto = await readFile(archivo, "utf8");
+  if (!/El Worker es el que responde 301 y conserva el query string/.test(texto)) {
+    fail(`${archivo}: el comentario no dice que el Worker conserva el query string`);
+  }
+  const reglas = texto.split("\n").filter((linea) => linea.trim() && !linea.trim().startsWith("#"));
+  if (reglas.length) fail(`${archivo}: no debe declarar redirecciones, solo el comentario`);
 }
 for (const { origen, destino } of redirecciones) {
   if (!origen.startsWith("/") || !destino.startsWith("/")) fail(`Ruta de redirección inválida: ${origen} → ${destino}`);
@@ -167,9 +173,8 @@ for (const { origen, destino } of redirecciones) {
 const config = JSON.parse(
   (await readFile("wrangler.jsonc", "utf8")).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, ""),
 );
-const rutas = config.assets?.run_worker_first;
-if (JSON.stringify(rutas) !== JSON.stringify(rutasDelWorker())) {
-  fail("run_worker_first no coincide con worker/redirects.mjs");
+if (config.assets?.run_worker_first !== true) {
+  fail("run_worker_first debe ser true para que /ERPA, /Erep y /INICIO lleguen al Worker");
 }
 if (config.assets?.directory !== "./dist" || config.assets?.binding !== "ASSETS") {
   fail("Los assets deben usar directory ./dist y binding ASSETS");
