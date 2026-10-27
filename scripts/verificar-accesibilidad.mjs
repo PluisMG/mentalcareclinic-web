@@ -5,6 +5,14 @@ import { chromeEjecutable, servir } from "./servir.mjs";
 const puerto = 8794;
 const origen = `http://127.0.0.1:${puerto}`;
 const paginas = ["/", "/estabilizacion", "/contacto"];
+const paginasPublicas = [
+  "/",
+  "/residencia-puertas-abiertas",
+  "/estabilizacion",
+  "/consulta-externa",
+  "/historia",
+  "/contacto",
+];
 const vistas = [
   { nombre: "móvil", width: 390, height: 844 },
   { nombre: "escritorio", width: 1280, height: 800 },
@@ -154,6 +162,46 @@ try {
     return cruza ? `el pie queda bajo el botón (${Math.round(pie.bottom)} / ${Math.round(flotante.top)})` : "";
   });
   if (tapa) fallar(`/contacto móvil: ${tapa}`);
+
+  for (const ruta of paginasPublicas) {
+    await pagina.goto(`${origen}${ruta}`, { waitUntil: "networkidle" });
+    const golpes = await pagina.evaluate(() => {
+      const boton = document.querySelector("a.float");
+      if (!boton) return ["falta el botón de WhatsApp"];
+      const posicion = getComputedStyle(boton).position;
+      if (posicion === "fixed" || posicion === "sticky") return [`el botón sigue en ${posicion}`];
+      const paso = Math.max(180, Math.floor(window.innerHeight * 0.65));
+      const golpes = [];
+      const vistos = new Set();
+      for (let y = 0; y <= document.documentElement.scrollHeight; y += paso) {
+        window.scrollTo(0, y);
+        const flotante = boton.getBoundingClientRect();
+        if (flotante.width < 1 || flotante.height < 1) continue;
+        for (const nodo of document.querySelectorAll("a, button, h1, h2, h3, h4, h5, h6")) {
+          if (nodo === boton || boton.contains(nodo)) continue;
+          const estilo = getComputedStyle(nodo);
+          if (estilo.display === "none" || estilo.visibility === "hidden") continue;
+          const rect = nodo.getBoundingClientRect();
+          if (rect.width < 1 || rect.height < 1) continue;
+          const cruza = !(
+            rect.bottom <= flotante.top + 0.5 ||
+            rect.top >= flotante.bottom - 0.5 ||
+            rect.right <= flotante.left + 0.5 ||
+            rect.left >= flotante.right - 0.5
+          );
+          if (!cruza) continue;
+          const texto = (nodo.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
+          const clave = `${nodo.tagName}:${texto}`;
+          if (vistos.has(clave)) continue;
+          vistos.add(clave);
+          golpes.push(`«${texto}»`);
+          if (golpes.length >= 6) return golpes;
+        }
+      }
+      return golpes;
+    });
+    for (const golpe of golpes) fallar(`${ruta} móvil 390: el botón se superpone con ${golpe}`);
+  }
   await pagina.close();
 } catch (error) {
   fallar(error instanceof Error ? error.message : String(error));
@@ -169,4 +217,4 @@ if (errores.length) {
   process.exit(1);
 }
 
-console.log("Accesibilidad correcta: axe, blancos de 24 px, imagen principal, mapa y pie libre en móvil.");
+console.log("Accesibilidad correcta: axe, blancos de 24 px, imagen principal, mapa y botón sin tapar el scroll.");

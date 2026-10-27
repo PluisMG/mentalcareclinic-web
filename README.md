@@ -40,7 +40,7 @@ npm run preview
 | Fotos nuevas | `src/assets/images/` y el componente que las usa |
 | Rutas viejas (`/inicio`, `/erpa`, `/erep`) | `worker/redirects.mjs` |
 
-El teléfono de llamada es `961 369 2795` (`tel:+529613692795`). El de WhatsApp es `961 100 3707` y todos los enlaces salen de `whatsappHref()` hacia `https://wa.me/529611003707`, con un mensaje distinto por página.
+El teléfono de llamada es `961 369 2795` (`tel:+529613692795`). El de WhatsApp es `961 100 3707` y todos los enlaces salen de `whatsappHref()` hacia `https://wa.me/529611003707`, con un mensaje distinto por página. En pantallas de menos de 1080 px el enlace del pie es una barra de ancho completo, al final del documento y sin `position: fixed`: así no tapa «Llamar» ni «Dirección» mientras se hace scroll. A partir de 1080 px esa barra se oculta; el encabezado ya muestra WhatsApp.
 
 ## Cómo se desplegaría en Cloudflare
 
@@ -54,7 +54,7 @@ No hay credenciales en este repositorio. `wrangler.jsonc` no trae `account_id`, 
    - `/erpa` y `/erpa/` → `/residencia-puertas-abiertas`
    - `/erep` y `/erep/` → `/estabilizacion`
    La lista vive solo en `worker/redirects.mjs`. La comparación no distingue mayúsculas: `/ERPA`, `/Erep` y `/INICIO` también responden 301. `public/_redirects` no declara rutas; el comentario dice que el Worker es el que conserva el query string. Astro sigue generando el HTML de respaldo para `npm run preview`, desde el mismo módulo; esa vista local no es el 301.
-5. `public/_headers` agrega las cabeceras de seguridad a los assets. El build añade una `Content-Security-Policy` con hashes del HTML, sin `unsafe-eval` ni `unsafe-inline`. El Worker copia esas cabeceras y la misma CSP en el 301.
+5. `public/_headers` agrega las cabeceras de seguridad a los assets. El build añade una `Content-Security-Policy` con hashes del HTML, sin `unsafe-eval` ni `unsafe-inline`. El Worker pone esas mismas cabeceras (HSTS, `X-Frame-Options`, CSP y el resto) en todas sus respuestas: 301, páginas y 404. Con `PREVIEW=1` también añade `X-Robots-Tag: noindex`.
 6. `html_handling` es `drop-trailing-slash`, igual que `trailingSlash: "never"` de Astro: `/contacto` responde 200 y `/contacto/` vuelve a `/contacto`. `not_found_handling` es `404-page`, el equivalente de la `404.html` que Pages habría detectado solo.
 7. `robots.txt` y `sitemap.xml` se generan en el build. En producción permiten el rastreo y el sitemap apunta a `https://www.mentalcareclinic.com`.
 
@@ -85,7 +85,7 @@ Por defecto no se carga nada: `.env.example` deja `PUBLIC_GA4_ID` vacío y el re
 
 Para activarla, el build tiene que recibir `PUBLIC_GA4_ID` con forma `G-XXXXXXXX`. El sitio es estático: cambiar el ID pide un build nuevo. Sin esa variable no aparece el aviso ni hay medición.
 
-Si el ID es válido, un aviso de cookies ofrece Aceptar y Rechazar con el mismo peso visual. La decisión se guarda en el navegador y el pie tiene «Cambiar la decisión de cookies». Antes de aceptar no se pide nada a Google. Consent Mode v2 arranca con todo en `denied`. `ad_storage`, `ad_user_data` y `ad_personalization` se quedan en `denied`. `allow_google_signals` queda en `false`. Tras aceptar, solo `analytics_storage` pasa a `granted`.
+Si el ID es válido, un aviso de cookies ofrece Aceptar y Rechazar con el mismo peso visual. La decisión se guarda en el navegador y el pie tiene «Cambiar la decisión de cookies». Antes de aceptar no se pide nada a Google. Consent Mode v2 arranca con todo en `denied`. `ad_storage`, `ad_user_data` y `ad_personalization` se quedan en `denied`. `allow_google_signals` queda en `false`. Tras aceptar, solo `analytics_storage` pasa a `granted`. Al revocar, el sitio borra `_ga` y `_ga_*` en el host actual y en el dominio padre (`.mentalcareclinic.com`), con `path=/`.
 
 Los eventos, solo con consentimiento, son `contacto_whatsapp` (cualquier enlace a wa.me) y `contacto_llamada` (cualquier enlace `tel:`). No se envía el texto del mensaje ni información clínica. El aviso no enlaza al aviso de privacidad, que sigue sin publicarse.
 
@@ -104,6 +104,10 @@ Los eventos, solo con consentimiento, son `contacto_whatsapp` (cualquier enlace 
 `/aviso-de-privacidad` no se publica. El borrador sigue en `src/content/privacidad.ts` y `src/borradores/aviso-de-privacidad.astro`, fuera de `src/pages`, del sitemap y de los enlaces, hasta que un abogado entregue el texto.
 
 El mapa de contacto no se incrusta hasta que la persona pulsa «Mostrar mapa». También hay un enlace para abrirlo en Google Maps. La consulta del mapa usa la calle en la que coinciden las fuentes (Avenida 15 Norte, entre 4a y 5a Oriente, Col. La Pimienta). El número de la casa no está fijado.
+
+## Fachada en el móvil
+
+En la portada, `sizes` es `(min-width: 1080px) 462px, calc(100vw - 2rem)` y el `srcset` ofrece 400, 480 y 600. A 390 px de CSS, `100vw - 2rem` son unos 358 px. Con DPR 3 el navegador necesita unos 1074 px de dispositivo, así que elige el candidato más grande: el AVIF de 600, unos 41 KB. Es la elección correcta: un archivo más ancho pesaría más, y 480 se vería blando a ese DPR. En escritorio, a partir de 1080 px, el hueco es de 462 px y se sirve el de 480.
 
 ## Sesión grupal en el patio
 

@@ -72,8 +72,34 @@ function cargarGa4(id: string) {
   });
 }
 
+function dominioPadre(host: string): string | null {
+  if (host === "localhost" || /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null;
+  const partes = host.split(".").filter(Boolean);
+  if (partes.length < 2) return null;
+  return `.${partes.slice(-2).join(".")}`;
+}
+
+function borrarCookiesDeAnalitica() {
+  const nombres = new Set<string>(["_ga"]);
+  for (const parte of document.cookie.split(";")) {
+    const nombre = parte.trim().split("=")[0];
+    if (nombre === "_ga" || nombre.startsWith("_ga_")) nombres.add(nombre);
+  }
+  const padre = dominioPadre(location.hostname);
+  for (const nombre of nombres) {
+    const base = `${nombre}=; Max-Age=0; path=/`;
+    document.cookie = base;
+    document.cookie = `${base}; Secure`;
+    document.cookie = `${base}; domain=${location.hostname}`;
+    if (!padre) continue;
+    document.cookie = `${base}; domain=${padre}`;
+    document.cookie = `${base}; domain=${padre}; Secure`;
+  }
+}
+
 function retirarAnalitica() {
   if (typeof window.gtag === "function") aplicarConsentimiento(false);
+  borrarCookiesDeAnalitica();
 }
 
 function enviar(nombre: "contacto_whatsapp" | "contacto_llamada") {

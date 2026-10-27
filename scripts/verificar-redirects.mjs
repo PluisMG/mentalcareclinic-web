@@ -116,7 +116,26 @@ function ubicacionEsperada(destino) {
   return new URL(destino + consulta, origen).href;
 }
 
+function exigirSeguridad(ruta, respuesta, encabezados, csp, preview) {
+  for (const [nombre, valor] of encabezados) {
+    const recibido = respuesta.headers.get(nombre);
+    if (recibido !== valor) fail(`${ruta}: falta ${nombre}: ${valor} (llegó ${recibido})`);
+  }
+  if (respuesta.headers.get("content-security-policy") !== csp) {
+    fail(`${ruta}: la CSP no coincide con dist/_headers`);
+  }
+  const robots = respuesta.headers.get("x-robots-tag");
+  if (preview && robots !== "noindex") fail(`${ruta}: con PREVIEW=1 falta X-Robots-Tag: noindex`);
+  if (!preview && robots) fail(`${ruta}: producción no debe enviar X-Robots-Tag (${robots})`);
+}
+
 async function revisar(preview) {
+  const encabezados = encabezadosDe(await readFile("public/_headers", "utf8"));
+  const csp = (await readFile("dist/_headers", "utf8")).match(/^\s*Content-Security-Policy:\s*(.+)$/m)?.[1] ?? "";
+  if (!csp || csp.includes("unsafe-eval") || csp.includes("unsafe-inline")) {
+    fail("La CSP de dist/_headers no es válida");
+  }
+
   const variantes = redirecciones.flatMap(({ origen: ruta, destino }) => [
     [ruta, destino],
     [`${ruta}/`, destino],
@@ -138,49 +157,18 @@ async function revisar(preview) {
     if (location !== ubicacionEsperada(destino)) {
       fail(`${variante}: Location «${location}» no conserva ${consulta} hacia ${destino}`);
     }
-    const robots = respuesta.headers.get("x-robots-tag");
-    if (preview && robots !== "noindex") fail(`${variante}: con PREVIEW=1 falta X-Robots-Tag: noindex`);
-    if (!preview && robots) fail(`${variante}: producción no debe enviar X-Robots-Tag (${robots})`);
+    exigirSeguridad(variante, respuesta, encabezados, csp, preview);
   }
 
   for (const pagina of paginas) {
     const respuesta = await pedir(pagina);
     if (respuesta.status !== 200) fail(`${pagina}: se esperaba 200 y llegó ${respuesta.status}`);
-    const robots = respuesta.headers.get("x-robots-tag");
-    if (preview) {
-      if (robots !== "noindex") fail(`${pagina}: con PREVIEW=1 el asset debe llevar X-Robots-Tag: noindex`);
-    } else if (robots) {
-      fail(`${pagina}: producción no debe enviar X-Robots-Tag (${robots})`);
-    }
+    exigirSeguridad(pagina, respuesta, encabezados, csp, preview);
   }
 
   const ausente = await pedir("/esta-ruta-no-existe");
   if (ausente.status !== 404) fail(`/esta-ruta-no-existe: se esperaba 404 y llegó ${ausente.status}`);
-
-  const inicio = await pedir(`/${consulta}`);
-  const encabezados = encabezadosDe(await readFile("public/_headers", "utf8"));
-  for (const [nombre, valor] of encabezados) {
-    const recibido = inicio.headers.get(nombre);
-    if (recibido !== valor) fail(`/: falta ${nombre}: ${valor} (llegó ${recibido})`);
-  }
-  const redireccion = await pedir(`/erpa${consulta}`);
-  for (const [nombre, valor] of encabezados) {
-    const recibido = redireccion.headers.get(nombre);
-    if (recibido !== valor) fail(`/erpa: el 301 no copia ${nombre} (llegó ${recibido})`);
-  }
-
-  const csp = (await readFile("dist/_headers", "utf8")).match(/^\s*Content-Security-Policy:\s*(.+)$/m)?.[1] ?? "";
-  if (!csp || csp.includes("unsafe-eval") || csp.includes("unsafe-inline")) {
-    fail("La CSP de dist/_headers no es válida");
-  }
-  for (const [ruta, respuesta] of [
-    ["/", inicio],
-    ["/erpa", redireccion],
-  ]) {
-    if (respuesta.headers.get("content-security-policy") !== csp) {
-      fail(`${ruta}: la CSP no coincide con dist/_headers`);
-    }
-  }
+  exigirSeguridad("/esta-ruta-no-existe", ausente, encabezados, csp, preview);
 }
 
 const headers = await readFile("public/_headers", "utf8");
@@ -218,4 +206,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log("Redirecciones correctas: 301 con utm, páginas 200, ruta ausente 404, encabezados y PREVIEW=1.");
+console.log("Redirecciones correctas: 301 con utm, páginas 200, 404, seguridad en todas las respuestas y PREVIEW=1.");

@@ -32,7 +32,11 @@ const servidor = await servir("dist-analitica", puerto);
 const navegador = await chromium.launch({
   executablePath: await chromeEjecutable(),
   headless: true,
-  args: ["--no-sandbox", "--disable-dev-shm-usage"],
+  args: [
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--host-resolver-rules=MAP www.mentalcareclinic.com 127.0.0.1",
+  ],
 });
 
 const errores = [];
@@ -149,6 +153,54 @@ try {
   await rechazar.waitForTimeout(500);
   if (silenciosas.some((url) => esGoogle(url))) fallar("Rechazar igual cargó Google");
   await rechazar.close();
+
+  const revocar = await navegador.newPage({ viewport: { width: 390, height: 844 } });
+  await preparar(revocar);
+  await revocar.goto(`http://www.mentalcareclinic.com:${puerto}/`, { waitUntil: "networkidle" });
+  await revocar.locator("#consent-accept").waitFor({ state: "visible" });
+  const antes = await revocar.evaluate(() => {
+    const desc = Object.getOwnPropertyDescriptor(Document.prototype, "cookie");
+    const escrituras = [];
+    Object.defineProperty(document, "cookie", {
+      configurable: true,
+      get() {
+        return desc.get.call(document);
+      },
+      set(valor) {
+        escrituras.push(String(valor));
+        desc.set.call(document, valor);
+      },
+    });
+    window.__escrituras = escrituras;
+    document.cookie = "_ga=GA1.1.111.222; path=/";
+    document.cookie = "_ga_TEST=GS1.1.abc; path=/";
+    document.cookie = "_ga=GA1.1.333.444; path=/; domain=.mentalcareclinic.com";
+    document.cookie = "_ga_TEST=GS1.1.parent; path=/; domain=.mentalcareclinic.com";
+    return document.cookie;
+  });
+  if (!antes.includes("_ga=") || !antes.includes("_ga_TEST=")) {
+    fallar(`No se pudieron sembrar las cookies de Analytics: ${antes}`);
+  }
+  await revocar.locator("#consent-accept").click();
+  await revocar.locator("#cookie-prefs").click();
+  await revocar.locator("#consent-reject").click();
+  const despues = await revocar.evaluate(() => ({
+    cookie: document.cookie,
+    escrituras: window.__escrituras,
+  }));
+  if (/(?:^|; )_ga=/.test(despues.cookie) || despues.cookie.includes("_ga_TEST=")) {
+    fallar(`Tras revocar siguen las cookies: ${despues.cookie}`);
+  }
+  const caducadas = [
+    "_ga=; Max-Age=0; path=/",
+    "_ga=; Max-Age=0; path=/; domain=.mentalcareclinic.com",
+    "_ga_TEST=; Max-Age=0; path=/",
+    "_ga_TEST=; Max-Age=0; path=/; domain=.mentalcareclinic.com",
+  ];
+  for (const esperada of caducadas) {
+    if (!despues.escrituras.includes(esperada)) fallar(`No se borró con «${esperada}»`);
+  }
+  await revocar.close();
 } catch (error) {
   fallar(error instanceof Error ? error.stack || error.message : String(error));
 } finally {
@@ -162,4 +214,4 @@ if (errores.length) {
   process.exit(1);
 }
 
-console.log("Analítica correcta: sin consentimiento no hay Google; al aceptar cargan gtag y los dos eventos.");
+console.log("Analítica correcta: sin consentimiento no hay Google; al aceptar cargan gtag y los dos eventos; al revocar se borran _ga y _ga_*.");

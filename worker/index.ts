@@ -1,7 +1,7 @@
 import { politicaCsp } from "./csp-valor.mjs";
 import { destinoDe } from "./redirects.mjs";
 
-/** Mismos valores que `public/_headers`. El 301 no pasa por los assets, así que hay que copiarlos. */
+/** Mismos valores que `public/_headers`. Toda respuesta del Worker los lleva, también el 301. */
 const SEGURIDAD = [
   ["X-Content-Type-Options", "nosniff"],
   ["Referrer-Policy", "strict-origin-when-cross-origin"],
@@ -14,16 +14,16 @@ const SEGURIDAD = [
   ["Content-Security-Policy", politicaCsp],
 ] as const;
 
-function encabezadosDeRedireccion(location: string, preview: boolean): Headers {
-  const headers = new Headers({ Location: location });
+function aplicarSeguridad(headers: Headers, preview: boolean) {
   for (const [nombre, valor] of SEGURIDAD) headers.set(nombre, valor);
   if (preview) headers.set("X-Robots-Tag", "noindex");
-  return headers;
 }
 
 export default {
-  async fetch(request, env): Promise<Response> {
+  async fetch(request, env, ctx): Promise<Response> {
+    void ctx;
     const url = new URL(request.url);
+    const preview = env.PREVIEW === "1";
     const destino = destinoDe(url.pathname);
     if (destino) {
       const location = new URL(destino, url);
@@ -36,11 +36,19 @@ export default {
           status: 301,
         }),
       );
-      return new Response(null, {
-        status: 301,
-        headers: encabezadosDeRedireccion(location.href, env.PREVIEW === "1"),
-      });
+      const headers = new Headers({ Location: location.href });
+      aplicarSeguridad(headers, preview);
+      return new Response(null, { status: 301, headers });
     }
-    return env.ASSETS.fetch(request);
+    const respuesta = await env.ASSETS.fetch(request);
+    const headers = new Headers(respuesta.headers);
+    headers.delete("content-encoding");
+    headers.delete("content-length");
+    aplicarSeguridad(headers, preview);
+    return new Response(respuesta.body, {
+      status: respuesta.status,
+      statusText: respuesta.statusText,
+      headers,
+    });
   },
 } satisfies ExportedHandler<Env>;

@@ -88,7 +88,11 @@ const ogImage = `${site.url}${site.ogImage}`;
     }
     <script>
       import { iniciarSitio } from "../scripts/consent";
-      iniciarSitio();
+      // load, no antes: el módulo diferido corre antes del primer paint y retrasaba
+      // el párrafo del encabezado, que es el LCP en la residencia.
+      const arrancar = () => iniciarSitio();
+      if (document.readyState === "complete") arrancar();
+      else window.addEventListener("load", arrancar, { once: true });
     </script>
   </body>
 </html>

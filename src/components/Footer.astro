@@ -9,11 +9,6 @@ const { message } = Astro.props;
 const year = 2026;
 ---
 <footer class="site-footer">
-  <a class="float" href={whatsappHref(message)} target="_blank" rel="noopener noreferrer">
-    <Icon name="whatsapp" />
-    WhatsApp
-    <span class="sr-only"> (se abre en otra pestaña)</span>
-  </a>
   <div class="wrap footer-grid">
     <div>
       <p class="footer-name">MentalCareClinic</p>
@@ -64,4 +59,9 @@ const year = 2026;
     <p>© {year} MentalCareClinic. {site.direccion.ciudad}, {site.direccion.estado}.</p>
     <p>La información del sitio no sustituye una valoración clínica.</p>
   </div>
+  <a class="float" href={whatsappHref(message)} target="_blank" rel="noopener noreferrer">
+    <Icon name="whatsapp" />
+    WhatsApp
+    <span class="sr-only"> (se abre en otra pestaña)</span>
+  </a>
 </footer>

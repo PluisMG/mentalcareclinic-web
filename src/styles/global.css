@@ -30,7 +30,6 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-bottom: 6rem;
 }
 
 body {
@@ -68,7 +67,6 @@ h3 {
   line-height: 1.15;
   letter-spacing: -0.02em;
   margin: 0 0 0.75rem;
-  text-wrap: balance;
 }
 
 h1 {
@@ -327,7 +325,7 @@ a:hover {
 }
 
 .page {
-  padding: 0.6rem 0 calc(3.5rem + 5.75rem);
+  padding: 0.6rem 0 2.5rem;
 }
 
 .eyebrow {
@@ -609,7 +607,7 @@ blockquote {
 .site-footer {
   background: var(--forest-deep);
   color: #f4efe6;
-  padding: 2.2rem 0 calc(7.5rem + env(safe-area-inset-bottom, 0px));
+  padding: 2.2rem 0 0;
 }
 
 .site-footer a {
@@ -674,27 +672,28 @@ blockquote {
   cursor: pointer;
 }
 
+/* Barra al final del pie, en el flujo. Un fixed tapa enlaces mientras se hace scroll. */
 .float {
   display: flex;
-  position: fixed;
-  right: 1rem;
-  bottom: 1rem;
-  z-index: 40;
+  position: static;
+  width: 100%;
+  justify-content: center;
   align-items: center;
   gap: 0.4rem;
   min-height: 52px;
-  padding: 0.7rem 1rem;
-  border-radius: 999px;
+  margin-top: 1.5rem;
+  padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  border-radius: 0;
   background: var(--forest);
   color: #fff;
   text-decoration: none;
   font-weight: 700;
-  border: 2px solid #f7f3ec;
-  box-shadow: var(--shadow);
+  border: 0;
+  box-shadow: none;
 }
 
-body.has-consent .float {
-  bottom: 8.5rem;
+.site-footer .float {
+  color: #fff;
 }
 
 .consent {
@@ -860,10 +859,6 @@ body.has-consent .float {
 
   .site-footer {
     padding-bottom: 2.2rem;
-  }
-
-  html {
-    scroll-padding-bottom: 0;
   }
 
   body:has(.consent:not([hidden])) {
