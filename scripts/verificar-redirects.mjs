@@ -24,9 +24,7 @@ function encabezadosDe(texto) {
 }
 
 function sinRobots(texto) {
-  return texto
-    .replace(/\n\/\*\n  X-Robots-Tag: noindex\n/g, "")
-    .replace(/^[ \t]*X-Robots-Tag:.*\n?/gm, "");
+  return texto.replace(/^[ \t]*X-Robots-Tag:.*\n?/gm, "").replace(/\n\/\*\n(?=\s*$)/g, "\n");
 }
 
 function detener(child) {

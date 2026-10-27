@@ -10,8 +10,10 @@ const MARCA = "X-Robots-Tag: noindex";
  */
 export function conRobots(headers) {
   if (headers.includes("X-Robots-Tag:")) return headers;
+  const linea = `  ${MARCA}\n`;
+  if (headers.startsWith("/*\n")) return `/*\n${linea}${headers.slice(3)}`;
   const salto = headers.endsWith("\n") ? "" : "\n";
-  return `${headers}${salto}\n/*\n  ${MARCA}\n`;
+  return `${headers}${salto}\n/*\n${linea}`;
 }
 
 async function main() {
