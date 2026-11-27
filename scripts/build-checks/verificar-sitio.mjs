@@ -1,4 +1,3 @@
-import { spawnSync } from "node:child_process";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { urlDelSitio } from "../sitio-url.mjs";
@@ -178,11 +177,6 @@ const lineaIndexar = ejemplo.split("\n").find((linea) => linea.startsWith("PUBLI
 if (lineaIndexar !== "PUBLIC_INDEXAR=") {
   fail(`.env.example debe tener PUBLIC_INDEXAR= vacío (llegó ${lineaIndexar ?? "ausente"})`);
 }
-const lineaUrl = ejemplo.split("\n").find((linea) => linea.startsWith("PUBLIC_SITE_URL="));
-if (lineaUrl !== "PUBLIC_SITE_URL=https://app.mentalcareclinic.com") {
-  fail(`.env.example debe fijar PUBLIC_SITE_URL=https://app.mentalcareclinic.com (llegó ${lineaUrl ?? "ausente"})`);
-}
-
 const vercel = JSON.parse(await readFile("vercel.json", "utf8"));
 if (vercel.trailingSlash !== false) fail("vercel.json trailingSlash debe ser false");
 const redirecciones = vercel.redirects ?? [];
@@ -269,13 +263,6 @@ if (!indexar) {
       fail(`${file}: con indexación debe llevar meta robots index, follow`);
     }
   }
-}
-
-const listado = spawnSync("git", ["ls-files"], { encoding: "utf8" });
-if (listado.status !== 0) fail("git ls-files no pudo listar el repositorio");
-else {
-  const restos = listado.stdout.split("\n").filter((linea) => /wrangler|worker\//.test(linea));
-  if (restos.length) fail(`Quedan archivos de Cloudflare: ${restos.join(", ")}`);
 }
 
 const altPatio =

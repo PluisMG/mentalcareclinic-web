@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
@@ -38,4 +39,18 @@ test("los encabezados de seguridad y el noindex de vista previa están declarado
   assert.equal(vista.has[0].value, "(?:.+\\.)?vercel\\.app");
   assert.equal(vista.headers[0].key, "X-Robots-Tag");
   assert.equal(vista.headers[0].value, "noindex");
+});
+
+test("el repositorio no conserva wrangler ni el Worker", () => {
+  const listado = spawnSync("git", ["ls-files"], { encoding: "utf8" });
+  assert.equal(listado.status, 0, listado.stderr);
+  const restos = listado.stdout.split("\n").filter((linea) => /wrangler|worker\//.test(linea));
+  assert.deepEqual(restos, []);
+});
+
+test(".env.example deja PUBLIC_INDEXAR vacío y publica la URL canónica", async () => {
+  const ejemplo = await readFile(new URL("../.env.example", import.meta.url), "utf8");
+  const lineas = ejemplo.split("\n");
+  assert.equal(lineas.includes("PUBLIC_INDEXAR="), true);
+  assert.equal(lineas.includes("PUBLIC_SITE_URL=https://app.mentalcareclinic.com"), true);
 });

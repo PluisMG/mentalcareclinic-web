@@ -26,3 +26,24 @@ jobs:
       - run: npm run test:unit
       - run: npm run build
       - run: npm run test:e2e
+      - name: Producción sin PUBLIC_SITE_URL sale con 1
+        env:
+          VERCEL_ENV: production
+          PUBLIC_SITE_URL: ""
+        run: |
+          set +e
+          npm run build
+          codigo=$?
+          if [ "$codigo" -eq 0 ]; then
+            echo "El build de producción sin PUBLIC_SITE_URL no debe pasar"
+            exit 1
+          fi
+      - name: Producción sin PUBLIC_INDEXAR lleva noindex
+        env:
+          VERCEL_ENV: production
+          PUBLIC_SITE_URL: https://app.mentalcareclinic.com
+          PUBLIC_INDEXAR: ""
+        run: |
+          npm run build
+          grep -q '<meta name="robots" content="noindex">' dist/index.html
+          grep -q 'Disallow: /' dist/robots.txt

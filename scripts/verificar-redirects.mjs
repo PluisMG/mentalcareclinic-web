@@ -47,8 +47,8 @@ function exigirSeguridad(ruta, res, pares) {
 
 function exigirRobots(ruta, res, vistaPrevia) {
   const robots = encabezado(res, "x-robots-tag");
-  if (vistaPrevia && robots !== "noindex") fail(`${ruta}: con Host de vercel.app falta X-Robots-Tag: noindex`);
-  if (!vistaPrevia && robots) fail(`${ruta}: este host no debe enviar X-Robots-Tag (${robots})`);
+  if (vistaPrevia && robots !== "noindex") fallar(`${ruta}: con Host de vercel.app falta X-Robots-Tag: noindex`);
+  if (!vistaPrevia && robots) fallar(`${ruta}: este host no debe enviar X-Robots-Tag (${robots})`);
 }
 
 function ubicacionBien(location, pathname, search) {
@@ -106,7 +106,7 @@ try {
     const respuesta = await pedir(pagina);
     if (respuesta.statusCode !== 200) fallar(`${pagina}: se esperaba 200 y llegó ${respuesta.statusCode}`);
     const location = encabezado(respuesta, "location");
-    if (location) fail(`${pagina}: no debe redirigir (Location ${location})`);
+    if (location) fallar(`${pagina}: no debe redirigir (Location ${location})`);
     exigirSeguridad(pagina, respuesta, seguridad);
     exigirRobots(pagina, respuesta, false);
     const preview = await pedir(pagina, "x.vercel.app");
