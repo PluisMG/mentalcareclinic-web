@@ -1,0 +1,28 @@
+name: verificar
+
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  # AP-2026-11-26-10. No es un secreto. PUBLIC_INDEXAR no se define: el build lleva noindex.
+  PUBLIC_SITE_URL: https://app.mentalcareclinic.com
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:unit
+      - run: npm run build
+      - run: npm run test:e2e

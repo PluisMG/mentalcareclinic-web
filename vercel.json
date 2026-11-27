@@ -1,0 +1,74 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "astro",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/inicio",
+      "destination": "/",
+      "statusCode": 301
+    },
+    {
+      "source": "/erpa",
+      "destination": "/residencia-puertas-abiertas",
+      "statusCode": 301
+    },
+    {
+      "source": "/erep",
+      "destination": "/estabilizacion",
+      "statusCode": 301
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "accelerometer=(), browsing-topics=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com 'sha256-TfO0zVlpYQF9Y/W2Xj6EB1A8UhO+xIPBu3Q9KLsootI='; style-src 'self' 'sha256-1iJPX8vq/zBBwN8E9dSXfrMVmO85TkHCYklXMJnQz1E='; img-src 'self' data: https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com; font-src 'self'; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.googletagmanager.com; frame-src https://www.google.com https://maps.google.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; worker-src 'none'"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:.+\\.)?vercel\\.app"
+        }
+      ],
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    }
+  ]
+}

@@ -1,209 +1,134 @@
-import { spawn } from "node:child_process";
-import { readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { redirecciones } from "../worker/redirects.mjs";
-import { conRobots } from "./encabezado-preview.mjs";
+import http from "node:http";
+import { readFile } from "node:fs/promises";
+import { servir } from "./servir.mjs";
 
 const puerto = 8791;
-const origen = `http://127.0.0.1:${puerto}`;
 const consulta = "?utm_source=a&utm_medium=b";
+const consultaX = "?utm_source=x&utm_medium=y";
 const paginas = ["/", "/residencia-puertas-abiertas", "/estabilizacion", "/consulta-externa", "/historia", "/contacto"];
-const errors = [];
+const errores = [];
 
-function fail(message) {
-  errors.push(message);
+function fallar(mensaje) {
+  errores.push(mensaje);
 }
 
-function encabezadosDe(texto) {
-  const pares = [];
-  for (const line of texto.split("\n")) {
-    const match = line.match(/^\s+([^:\s][^:]*):\s*(.*?)\s*$/);
-    if (match) pares.push([match[1], match[2]]);
-  }
-  return pares;
-}
-
-function sinRobots(texto) {
-  return texto.replace(/^[ \t]*X-Robots-Tag:.*\n?/gm, "").replace(/\n\/\*\n(?=\s*$)/g, "\n");
-}
-
-function detener(child) {
-  return new Promise((resolve) => {
-    if (!child?.pid || child.exitCode !== null) {
-      resolve();
-      return;
-    }
-    const timer = setTimeout(() => {
-      try {
-        process.kill(-child.pid, "SIGKILL");
-      } catch {
-        child.kill("SIGKILL");
-      }
-      resolve();
-    }, 5000);
-    child.once("exit", () => {
-      clearTimeout(timer);
-      resolve();
-    });
-    try {
-      process.kill(-child.pid, "SIGTERM");
-    } catch {
-      child.kill("SIGTERM");
-    }
-  });
-}
-
-function iniciar(args) {
-  const bin = path.resolve("node_modules/.bin/wrangler");
+function pedir(ruta, host = `127.0.0.1:${puerto}`) {
   return new Promise((resolve, reject) => {
-    const child = spawn(
-      bin,
-      [
-        "dev",
-        "--ip",
-        "127.0.0.1",
-        "--port",
-        String(puerto),
-        "--inspector-port",
-        "9231",
-        "--local",
-        "--log-level",
-        "info",
-        "--show-interactive-dev-session",
-        "false",
-        ...args,
-      ],
+    const req = http.request(
       {
-        detached: true,
-        stdio: ["ignore", "pipe", "pipe"],
-        env: { ...process.env, CI: "1", WRANGLER_SEND_METRICS: "false" },
+        hostname: "127.0.0.1",
+        port: puerto,
+        path: ruta,
+        method: "GET",
+        headers: { Host: host },
+      },
+      (res) => {
+        res.resume();
+        res.on("end", () => resolve(res));
       },
     );
-    let texto = "";
-    let cerrado = false;
-    const fallar = (mensaje) => {
-      if (cerrado) return;
-      cerrado = true;
-      clearTimeout(timer);
-      const error = new Error(`${mensaje}\n${texto.slice(-4000)}`);
-      error.child = child;
-      reject(error);
-    };
-    const timer = setTimeout(() => fallar("wrangler dev no arrancó"), 90000);
-    const alSalir = (code) => fallar(`wrangler dev salió con ${code}`);
-    child.once("exit", alSalir);
-    const recibir = (chunk) => {
-      texto += chunk.toString();
-      if (!cerrado && /Ready on http:\/\/127\.0\.0\.1:8791/.test(texto)) {
-        cerrado = true;
-        clearTimeout(timer);
-        child.removeListener("exit", alSalir);
-        resolve(child);
-      }
-    };
-    child.stdout.on("data", recibir);
-    child.stderr.on("data", recibir);
+    req.on("error", reject);
+    req.end();
   });
 }
 
-async function pedir(ruta) {
-  const respuesta = await fetch(`${origen}${ruta}`, { redirect: "manual" });
-  await respuesta.arrayBuffer();
-  return respuesta;
+function encabezado(res, nombre) {
+  const valor = res.headers[nombre.toLowerCase()];
+  if (Array.isArray(valor)) return valor.join(", ");
+  return valor ?? null;
 }
 
-function ubicacionEsperada(destino) {
-  return new URL(destino + consulta, origen).href;
+function exigirSeguridad(ruta, res, pares) {
+  for (const [nombre, valor] of pares) {
+    const recibido = encabezado(res, nombre);
+    if (recibido !== valor) fallar(`${ruta}: falta ${nombre}: ${valor} (llegó ${recibido})`);
+  }
 }
 
-function exigirSeguridad(ruta, respuesta, encabezados, csp, preview) {
-  for (const [nombre, valor] of encabezados) {
-    const recibido = respuesta.headers.get(nombre);
-    if (recibido !== valor) fail(`${ruta}: falta ${nombre}: ${valor} (llegó ${recibido})`);
-  }
-  if (respuesta.headers.get("content-security-policy") !== csp) {
-    fail(`${ruta}: la CSP no coincide con dist/_headers`);
-  }
-  const robots = respuesta.headers.get("x-robots-tag");
-  if (preview && robots !== "noindex") fail(`${ruta}: con PREVIEW=1 falta X-Robots-Tag: noindex`);
-  if (!preview && robots) fail(`${ruta}: producción no debe enviar X-Robots-Tag (${robots})`);
+function exigirRobots(ruta, res, vistaPrevia) {
+  const robots = encabezado(res, "x-robots-tag");
+  if (vistaPrevia && robots !== "noindex") fail(`${ruta}: con Host de vercel.app falta X-Robots-Tag: noindex`);
+  if (!vistaPrevia && robots) fail(`${ruta}: este host no debe enviar X-Robots-Tag (${robots})`);
 }
 
-async function revisar(preview) {
-  const encabezados = encabezadosDe(await readFile("public/_headers", "utf8"));
-  const csp = (await readFile("dist/_headers", "utf8")).match(/^\s*Content-Security-Policy:\s*(.+)$/m)?.[1] ?? "";
-  if (!csp || csp.includes("unsafe-eval") || csp.includes("unsafe-inline")) {
-    fail("La CSP de dist/_headers no es válida");
-  }
+function ubicacionBien(location, pathname, search) {
+  if (!location) return false;
+  const url = new URL(location);
+  return url.pathname === pathname && url.search === search;
+}
 
-  const variantes = redirecciones.flatMap(({ origen: ruta, destino }) => [
-    [ruta, destino],
-    [`${ruta}/`, destino],
-  ]);
-  variantes.push(
-    ["/ERPA", "/residencia-puertas-abiertas"],
-    ["/ERPA/", "/residencia-puertas-abiertas"],
-    ["/Erep", "/estabilizacion"],
-    ["/Erep/", "/estabilizacion"],
-    ["/INICIO", "/"],
-    ["/INICIO/", "/"],
-  );
-  for (const [variante, destino] of variantes) {
-    const respuesta = await pedir(`${variante}${consulta}`);
-    const location = respuesta.headers.get("location");
-    if (respuesta.status !== 301) {
-      fail(`${variante}: se esperaba 301 y llegó ${respuesta.status}`);
+const vercel = JSON.parse(await readFile("vercel.json", "utf8"));
+const seguridad = (vercel.headers ?? [])
+  .filter((regla) => !regla.has)
+  .flatMap((regla) => (regla.headers ?? []).map((item) => [item.key, item.value]));
+
+const servidor = await servir("dist", puerto);
+try {
+  const reglas = [
+    ["/inicio", "/"],
+    ["/erpa", "/residencia-puertas-abiertas"],
+    ["/erep", "/estabilizacion"],
+  ];
+  for (const search of [consulta, consultaX]) {
+    for (const [origen, destino] of reglas) {
+      const respuesta = await pedir(`${origen}${search}`);
+      if (respuesta.statusCode !== 301) fallar(`${origen}${search}: se esperaba 301 y llegó ${respuesta.statusCode}`);
+      const location = encabezado(respuesta, "location");
+      if (!ubicacionBien(location, destino, search)) {
+        fallar(`${origen}${search}: Location «${location}» no conserva la consulta hacia ${destino}`);
+      }
+      exigirSeguridad(`${origen}${search}`, respuesta, seguridad);
+      exigirRobots(`${origen}${search}`, respuesta, false);
+
+      const conBarra = await pedir(`${origen}/${search}`);
+      if (conBarra.statusCode !== 308) {
+        fallar(`${origen}/${search}: se esperaba 308 y llegó ${conBarra.statusCode}`);
+      }
+      const locationBarra = encabezado(conBarra, "location");
+      if (!ubicacionBien(locationBarra, origen, search)) {
+        fallar(`${origen}/${search}: Location «${locationBarra}» no quita la barra final conservando la consulta`);
+      }
+      exigirSeguridad(`${origen}/${search}`, conBarra, seguridad);
+      const siguiente = await pedir(`${origen}${search}`);
+      if (siguiente.statusCode !== 301) fallar(`${origen}/ luego sin barra: se esperaba 301`);
     }
-    if (location !== ubicacionEsperada(destino)) {
-      fail(`${variante}: Location «${location}» no conserva ${consulta} hacia ${destino}`);
-    }
-    exigirSeguridad(variante, respuesta, encabezados, csp, preview);
+  }
+
+  const vista = await pedir(`/erpa${consulta}`, "x.vercel.app");
+  if (vista.statusCode !== 301) fallar(`Host x.vercel.app /erpa: se esperaba 301 y llegó ${vista.statusCode}`);
+  exigirSeguridad("x.vercel.app /erpa", vista, seguridad);
+  exigirRobots("x.vercel.app /erpa", vista, true);
+  if (!ubicacionBien(encabezado(vista, "location"), "/residencia-puertas-abiertas", consulta)) {
+    fallar("Host x.vercel.app /erpa no conserva el query string");
   }
 
   for (const pagina of paginas) {
     const respuesta = await pedir(pagina);
-    if (respuesta.status !== 200) fail(`${pagina}: se esperaba 200 y llegó ${respuesta.status}`);
-    exigirSeguridad(pagina, respuesta, encabezados, csp, preview);
+    if (respuesta.statusCode !== 200) fallar(`${pagina}: se esperaba 200 y llegó ${respuesta.statusCode}`);
+    const location = encabezado(respuesta, "location");
+    if (location) fail(`${pagina}: no debe redirigir (Location ${location})`);
+    exigirSeguridad(pagina, respuesta, seguridad);
+    exigirRobots(pagina, respuesta, false);
+    const preview = await pedir(pagina, "x.vercel.app");
+    exigirSeguridad(`${pagina} preview`, preview, seguridad);
+    exigirRobots(`${pagina} preview`, preview, true);
   }
 
-  const ausente = await pedir("/esta-ruta-no-existe");
-  if (ausente.status !== 404) fail(`/esta-ruta-no-existe: se esperaba 404 y llegó ${ausente.status}`);
-  exigirSeguridad("/esta-ruta-no-existe", ausente, encabezados, csp, preview);
-}
-
-const headers = await readFile("public/_headers", "utf8");
-if (headers.includes("X-Robots-Tag")) fail("public/_headers no debe llevar X-Robots-Tag");
-const conVista = conRobots(headers);
-if (!conVista.includes("X-Robots-Tag: noindex")) fail("PREVIEW=1 no añade X-Robots-Tag: noindex");
-for (const [nombre, valor] of encabezadosDe(headers)) {
-  if (!conVista.includes(`${nombre}: ${valor}`)) fail(`La vista previa pierde el encabezado ${nombre}`);
-}
-
-const copia = path.resolve("dist/_headers");
-const original = await readFile(copia, "utf8");
-let servidor;
-try {
-  await writeFile(copia, sinRobots(original));
-  servidor = await iniciar([]);
-  await revisar(false);
-  await detener(servidor);
-  servidor = null;
-
-  await writeFile(copia, conRobots(sinRobots(original)));
-  servidor = await iniciar(["--var", "PREVIEW:1"]);
-  await revisar(true);
-} catch (error) {
-  if (error?.child) await detener(error.child);
-  throw error;
+  const ausente = await pedir("/no-existe");
+  if (ausente.statusCode !== 404) fallar(`/no-existe: se esperaba 404 y llegó ${ausente.statusCode}`);
+  exigirSeguridad("/no-existe", ausente, seguridad);
+  exigirRobots("/no-existe", ausente, false);
+  const ausentePreview = await pedir("/no-existe", "x.vercel.app");
+  exigirRobots("/no-existe preview", ausentePreview, true);
+  exigirSeguridad("/no-existe preview", ausentePreview, seguridad);
 } finally {
-  await writeFile(copia, original);
-  if (servidor) await detener(servidor);
+  await new Promise((resolve) => servidor.close(resolve));
 }
 
-if (errors.length) {
-  console.error(`Redirecciones fallidas (${errors.length}):`);
-  for (const error of errors) console.error(`- ${error}`);
+if (errores.length) {
+  console.error(`Redirecciones fallidas (${errores.length}):`);
+  for (const error of errores) console.error(`- ${error}`);
   process.exit(1);
 }
 
-console.log("Redirecciones correctas: 301 con utm, páginas 200, 404, seguridad en todas las respuestas y PREVIEW=1.");
+console.log("Redirecciones correctas: 301 con utm, barra final en 308, 200 sin redirección, 404 y X-Robots-Tag solo en *.vercel.app.");

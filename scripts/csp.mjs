@@ -27,12 +27,21 @@ async function walk(dir) {
   return files;
 }
 
+function esJavaScript(atributos) {
+  const tipo = atributos.match(/\btype\s*=\s*["']([^"']+)["']/i)?.[1]?.trim().toLowerCase() ?? "";
+  if (!tipo) return true;
+  return tipo === "module" || tipo === "text/javascript" || tipo === "application/javascript" || tipo === "text/ecmascript";
+}
+
 function bloques(html, etiqueta) {
   const expresion = new RegExp(`<${etiqueta}\\b([^>]*)>([\\s\\S]*?)</${etiqueta}>`, "gi");
   const salida = [];
   for (const coincidencia of html.matchAll(expresion)) {
     const atributos = coincidencia[1] ?? "";
     if (etiqueta === "script" && /\ssrc\s*=/.test(atributos)) continue;
+    // El JSON-LD lleva la URL canónica. No se ejecuta: no entra en el hash,
+    // para que la CSP no cambie al cambiar PUBLIC_SITE_URL.
+    if (etiqueta === "script" && !esJavaScript(atributos)) continue;
     const cuerpo = textoComoDom(coincidencia[2] ?? "");
     if (cuerpo.trim()) salida.push(cuerpo);
   }
@@ -49,11 +58,13 @@ export function politicaCsp(scripts, estilos) {
     "img-src 'self' data: https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com",
     "font-src 'self'",
     "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://*.googletagmanager.com",
+    // El diseño pide frame-src 'none'. El código abre un iframe de Google Maps
+    // (src/scripts/consent.ts, «Mostrar mapa»). Sin estos orígenes el mapa no se ve.
     "frame-src https://www.google.com https://maps.google.com",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'self'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
     "worker-src 'none'",
   ].join("; ");
 }
@@ -77,26 +88,44 @@ export async function calcularPolitica(directorio) {
   return politica;
 }
 
-export async function escribirPolitica(directorio, politica) {
-  const archivo = path.join(directorio, "_headers");
-  const cuerpo = await readFile(archivo, "utf8");
-  const sin = cuerpo.replace(/^[ \t]*Content-Security-Policy:.*\n?/m, "");
-  const base = sin.endsWith("\n") ? sin : `${sin}\n`;
-  await writeFile(archivo, `${base}  Content-Security-Policy: ${politica}\n`);
+function leerPolitica(json) {
+  for (const regla of json.headers ?? []) {
+    for (const encabezado of regla.headers ?? []) {
+      if (encabezado.key === "Content-Security-Policy") return encabezado.value;
+    }
+  }
+  return "";
 }
 
-export async function escribirModulo(politica) {
-  const destino = path.resolve("worker/csp-valor.mjs");
-  const contenido = `/* Generado por scripts/csp.mjs a partir del HTML de dist. */\nexport const politicaCsp = ${JSON.stringify(politica)};\n`;
-  await writeFile(destino, contenido);
+export async function escribirVercelJson(politica) {
+  const archivo = path.resolve("vercel.json");
+  const json = JSON.parse(await readFile(archivo, "utf8"));
+  let encontrado = false;
+  for (const regla of json.headers ?? []) {
+    for (const encabezado of regla.headers ?? []) {
+      if (encabezado.key === "Content-Security-Policy") {
+        encabezado.value = politica;
+        encontrado = true;
+      }
+    }
+  }
+  if (!encontrado) throw new Error("vercel.json no tiene Content-Security-Policy");
+  await writeFile(archivo, `${JSON.stringify(json, null, 2)}\n`);
 }
 
 async function main() {
-  const directorio = path.resolve("dist");
-  const politica = await calcularPolitica(directorio);
-  await escribirPolitica(directorio, politica);
-  await escribirModulo(politica);
-  console.log("CSP escrita en dist/_headers y worker/csp-valor.mjs.");
+  const politica = await calcularPolitica(path.resolve("dist"));
+  if (process.argv.includes("--check")) {
+    const json = JSON.parse(await readFile(path.resolve("vercel.json"), "utf8"));
+    if (leerPolitica(json) !== politica) {
+      console.error("La CSP de vercel.json no coincide con dist. Corre npm run csp y sube vercel.json.");
+      process.exit(1);
+    }
+    console.log("CSP de vercel.json coincide con dist.");
+    return;
+  }
+  await escribirVercelJson(politica);
+  console.log("CSP escrita en vercel.json.");
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

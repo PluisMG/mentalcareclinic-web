@@ -19,22 +19,6 @@ const tipos = new Map([
   [".ico", "image/x-icon"],
 ]);
 
-export function encabezadosBase(texto) {
-  const pares = [];
-  let activo = false;
-  for (const linea of texto.split("\n")) {
-    if (!linea.trim() || linea.trim().startsWith("#")) continue;
-    if (!linea.startsWith(" ") && !linea.startsWith("\t")) {
-      activo = linea.trim() === "/*";
-      continue;
-    }
-    if (!activo) continue;
-    const coincidencia = linea.match(/^\s+([^:\s][^:]*):\s*(.*?)\s*$/);
-    if (coincidencia) pares.push([coincidencia[1], coincidencia[2]]);
-  }
-  return pares;
-}
-
 async function existe(archivo) {
   try {
     const info = await stat(archivo);
@@ -44,16 +28,70 @@ async function existe(archivo) {
   }
 }
 
+function hostDe(valor) {
+  return String(valor ?? "").split(":")[0];
+}
+
+function fuenteCoincide(source, pathname) {
+  if (source === "/(.*)") return true;
+  return source === pathname;
+}
+
+function condicionCumple(condicion, host) {
+  if (condicion.type !== "host") return false;
+  return new RegExp(`^(?:${condicion.value})$`).test(host);
+}
+
+function encabezadosPara(config, pathname, host) {
+  const nombre = hostDe(host);
+  const salida = {};
+  for (const regla of config.headers ?? []) {
+    if (!fuenteCoincide(regla.source, pathname)) continue;
+    if (regla.has?.length && !regla.has.every((condicion) => condicionCumple(condicion, nombre))) continue;
+    for (const encabezado of regla.headers ?? []) salida[encabezado.key] = encabezado.value;
+  }
+  return salida;
+}
+
+function absoluto(host, ruta) {
+  const base = `http://${host || "127.0.0.1"}`;
+  return new URL(ruta, base).href;
+}
+
 export async function servir(raiz, puerto) {
-  const encabezados = encabezadosBase(await readFile(path.join(raiz, "_headers"), "utf8"));
+  const config = JSON.parse(await readFile(path.resolve("vercel.json"), "utf8"));
   const server = http.createServer(async (req, res) => {
-    const url = new URL(req.url ?? "/", "http://127.0.0.1");
-    let ruta = decodeURIComponent(url.pathname);
+    const host = req.headers.host ?? `127.0.0.1:${puerto}`;
+    const url = new URL(req.url ?? "/", `http://${host}`);
+    let ruta = url.pathname;
+    try {
+      ruta = decodeURIComponent(ruta);
+    } catch {
+      /* La ruta ya venía sin un escape válido. */
+    }
     if (ruta.includes("\0") || ruta.includes("..")) {
       res.writeHead(400);
       res.end();
       return;
     }
+
+    const cabeceras = () => encabezadosPara(config, ruta, host);
+
+    if (config.trailingSlash === false && ruta.length > 1 && ruta.endsWith("/")) {
+      const destino = absoluto(host, `${ruta.slice(0, -1)}${url.search}`);
+      res.writeHead(308, { ...cabeceras(), Location: destino });
+      res.end();
+      return;
+    }
+
+    const redireccion = (config.redirects ?? []).find((regla) => regla.source === ruta);
+    if (redireccion) {
+      const destino = absoluto(host, `${redireccion.destination}${url.search}`);
+      res.writeHead(redireccion.statusCode ?? 307, { ...cabeceras(), Location: destino });
+      res.end();
+      return;
+    }
+
     const candidatos = [];
     if (ruta.endsWith("/")) candidatos.push(path.join(raiz, ruta, "index.html"));
     else {
@@ -74,16 +112,16 @@ export async function servir(raiz, puerto) {
       archivo = path.join(raiz, "404.html");
       estado = 404;
       if (!(await existe(archivo))) {
-        res.writeHead(404);
+        res.writeHead(404, cabeceras());
         res.end("No encontrado");
         return;
       }
     }
-    const cabeceras = {
+    const cabecerasArchivo = {
       "content-type": tipos.get(path.extname(archivo)) ?? "application/octet-stream",
+      ...cabeceras(),
     };
-    for (const [nombre, valor] of encabezados) cabeceras[nombre] = valor;
-    res.writeHead(estado, cabeceras);
+    res.writeHead(estado, cabecerasArchivo);
     if (req.method === "HEAD") {
       res.end();
       return;

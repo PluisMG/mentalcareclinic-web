@@ -1,6 +1,7 @@
+import { spawnSync } from "node:child_process";
 import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
-import { redirecciones } from "../worker/redirects.mjs";
+import { urlDelSitio } from "../sitio-url.mjs";
 
 const root = path.resolve("dist");
 const errors = [];
@@ -36,6 +37,26 @@ async function exists(file) {
   }
 }
 
+function rutaDeArchivo(file) {
+  const rel = path.relative(root, file).split(path.sep).join("/");
+  if (rel === "index.html") return "/";
+  if (rel.endsWith("/index.html")) return `/${rel.slice(0, -"/index.html".length)}`;
+  if (rel.endsWith(".html")) return `/${rel.slice(0, -".html".length)}`;
+  return null;
+}
+
+function canonicalDe(ruta) {
+  if (ruta === "/") return `${siteUrl}/`;
+  return `${siteUrl}${ruta}`;
+}
+
+function fuentePermitida(source) {
+  return source === "/(.*)" || /^\/[a-z0-9-]+$/.test(source);
+}
+
+const siteUrl = urlDelSitio();
+const indexar = process.env.VERCEL_ENV === "production" && process.env.PUBLIC_INDEXAR === "1";
+
 const files = (await walk(root)).filter((file) => file.endsWith(".html"));
 const htmlFiles = new Map();
 
@@ -63,9 +84,11 @@ for (const [file, html] of htmlFiles) {
   const h1 = html.match(/<h1\b/gi) || [];
   if (h1.length !== 1) fail(`${file}: se esperaba un h1 y hay ${h1.length}`);
   if (!html.includes('lang="es-MX"')) fail(`${file}: falta lang="es-MX"`);
+  const ruta = rutaDeArchivo(file);
+  const esperada = ruta ? canonicalDe(ruta) : "";
   const canonical = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1];
-  if (!canonical?.startsWith("https://www.mentalcareclinic.com")) {
-    fail(`${file}: canónica inválida (${canonical ?? "ausente"})`);
+  if (!canonical || canonical !== esperada) {
+    fail(`${file}: canónica ${canonical ?? "ausente"}; se esperaba ${esperada}`);
   }
   if (!/<meta name="description" content="[^"]{40,}"/.test(html)) {
     fail(`${file}: falta meta description`);
@@ -130,9 +153,8 @@ for (const text of forbidden) {
 const textExt = new Set([".html", ".txt", ".xml", ".svg", ".js", ".css", ".json", ".mjs"]);
 const distFiles = await walk(root);
 for (const file of distFiles) {
-  const base = path.basename(file);
   const ext = path.extname(file);
-  if (base !== "_headers" && base !== "_redirects" && !textExt.has(ext)) continue;
+  if (!textExt.has(ext)) continue;
   const body = await readFile(file, "utf8");
   for (const marker of ["[POR CONFIRMAR", "Dato pendiente", "[REVISAR CON ABOGADO", "{{"]) {
     if (body.includes(marker)) fail(`${file}: contiene «${marker}»`);
@@ -151,55 +173,67 @@ if (joined.includes('id="consent"') || joined.includes("data-ga4=")) {
 }
 if (joined.includes("/aviso-de-privacidad")) fail("Quedó un enlace al aviso de privacidad");
 
-for (const archivo of ["public/_redirects", path.join(root, "_redirects")]) {
-  if (!(await exists(archivo))) {
-    fail(`Falta ${archivo}: el comentario debe decir que el Worker conserva el query string`);
-    continue;
-  }
-  const texto = await readFile(archivo, "utf8");
-  if (!/El Worker es el que responde 301 y conserva el query string/.test(texto)) {
-    fail(`${archivo}: el comentario no dice que el Worker conserva el query string`);
-  }
-  const reglas = texto.split("\n").filter((linea) => linea.trim() && !linea.trim().startsWith("#"));
-  if (reglas.length) fail(`${archivo}: no debe declarar redirecciones, solo el comentario`);
+const ejemplo = await readFile(".env.example", "utf8");
+const lineaIndexar = ejemplo.split("\n").find((linea) => linea.startsWith("PUBLIC_INDEXAR="));
+if (lineaIndexar !== "PUBLIC_INDEXAR=") {
+  fail(`.env.example debe tener PUBLIC_INDEXAR= vacío (llegó ${lineaIndexar ?? "ausente"})`);
 }
-for (const { origen, destino } of redirecciones) {
-  if (!origen.startsWith("/") || !destino.startsWith("/")) fail(`Ruta de redirección inválida: ${origen} → ${destino}`);
-  const candidates = resolveInternal(destino);
+const lineaUrl = ejemplo.split("\n").find((linea) => linea.startsWith("PUBLIC_SITE_URL="));
+if (lineaUrl !== "PUBLIC_SITE_URL=https://app.mentalcareclinic.com") {
+  fail(`.env.example debe fijar PUBLIC_SITE_URL=https://app.mentalcareclinic.com (llegó ${lineaUrl ?? "ausente"})`);
+}
+
+const vercel = JSON.parse(await readFile("vercel.json", "utf8"));
+if (vercel.trailingSlash !== false) fail("vercel.json trailingSlash debe ser false");
+const redirecciones = vercel.redirects ?? [];
+const origenes = new Set(redirecciones.map((regla) => regla.source));
+for (const origen of ["/inicio", "/erpa", "/erep"]) {
+  if (!origenes.has(origen)) fail(`Falta la redirección 301 de ${origen}`);
+}
+for (const origen of ["/consulta-externa", "/historia"]) {
+  if (origenes.has(origen)) fail(`${origen} no debe redirigir`);
+}
+for (const regla of redirecciones) {
+  if (regla.statusCode !== 301) fail(`${regla.source}: statusCode debe ser 301`);
+  if ("permanent" in regla) fail(`${regla.source}: no uses permanent (Vercel responde 308)`);
+  if (!fuentePermitida(regla.source)) fail(`${regla.source}: source no literal`);
+  if (!regla.destination?.startsWith("/")) fail(`${regla.source}: destino inválido`);
+  const candidates = resolveInternal(regla.destination);
   const list = Array.isArray(candidates) ? candidates : [candidates];
   const ok = await Promise.all(list.map((item) => exists(item)));
-  if (!ok.some(Boolean)) fail(`${origen} apunta a ${destino}, que no está en dist`);
+  if (!ok.some(Boolean)) fail(`${regla.source} apunta a ${regla.destination}, que no está en dist`);
 }
-const config = JSON.parse(
-  (await readFile("wrangler.jsonc", "utf8")).replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, ""),
-);
-if (config.assets?.run_worker_first !== true) {
-  fail("run_worker_first debe ser true para que /ERPA, /Erep y /INICIO lleguen al Worker");
+for (const regla of vercel.headers ?? []) {
+  if (!fuentePermitida(regla.source)) fail(`Encabezado con source no simulado: ${regla.source}`);
 }
-if (config.assets?.directory !== "./dist" || config.assets?.binding !== "ASSETS") {
-  fail("Los assets deben usar directory ./dist y binding ASSETS");
+const csp =
+  vercel.headers
+    ?.flatMap((regla) => regla.headers ?? [])
+    .find((encabezado) => encabezado.key === "Content-Security-Policy")?.value ?? "";
+if (!csp.includes("script-src") || csp.includes("unsafe-eval") || csp.includes("unsafe-inline")) {
+  fail("La CSP de vercel.json no es válida");
 }
-if (config.assets?.html_handling !== "drop-trailing-slash" || config.assets?.not_found_handling !== "404-page") {
-  fail("html_handling o not_found_handling no coinciden con el sitio");
-}
-if (config.name !== "mentalcareclinic") fail("El nombre del Worker debe seguir siendo neutro");
-if ("account_id" in config || "routes" in config || "route" in config) {
-  fail("wrangler.jsonc no debe traer account_id ni routes");
-}
-if (config.workers_dev !== false) fail("workers_dev debe quedar en false: no hay dominio");
-if (config.vars?.PREVIEW === "1") fail("PREVIEW=1 no puede quedar fijo en wrangler.jsonc");
-const headersPublicos = await readFile("public/_headers", "utf8");
-if (headersPublicos.includes("X-Robots-Tag")) fail("public/_headers no debe llevar X-Robots-Tag");
+
+const fuenteSitio = await readFile("src/config/site.ts", "utf8");
+const bloqueRutas = fuenteSitio.match(/export const rutasPublicas = \[([\s\S]*?)\] as const/);
+const rutasPublicas = bloqueRutas ? [...bloqueRutas[1].matchAll(/"([^"]+)"/g)].map((coincidencia) => coincidencia[1]) : [];
+if (!rutasPublicas.length) fail("No se pudieron leer rutasPublicas de src/config/site.ts");
 
 const sitemapPath = path.join(root, "sitemap.xml");
 if (!(await exists(sitemapPath))) fail("Falta dist/sitemap.xml");
 else {
   const sitemap = await readFile(sitemapPath, "utf8");
   const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
-  if (locs.length !== 6) fail(`sitemap.xml tiene ${locs.length} URLs; se esperaban 6`);
+  if (locs.length !== rutasPublicas.length) {
+    fail(`sitemap.xml tiene ${locs.length} URLs; rutasPublicas tiene ${rutasPublicas.length}`);
+  }
   if (sitemap.includes("aviso-de-privacidad")) fail("sitemap incluye el aviso de privacidad");
+  for (const ruta of rutasPublicas) {
+    const loc = canonicalDe(ruta);
+    if (!locs.includes(loc)) fail(`sitemap no incluye ${loc}`);
+  }
   for (const loc of locs) {
-    if (!loc.startsWith("https://www.mentalcareclinic.com")) fail(`URL de sitemap inesperada: ${loc}`);
+    if (!loc.startsWith(`${siteUrl}/`) && loc !== `${siteUrl}/`) fail(`URL de sitemap inesperada: ${loc}`);
     const pathname = new URL(loc).pathname;
     const candidates = resolveInternal(pathname);
     const list = Array.isArray(candidates) ? candidates : [candidates];
@@ -209,31 +243,39 @@ else {
 }
 
 const robots = await readFile(path.join(root, "robots.txt"), "utf8");
-const esPreview = robots.includes("Disallow: /") && !robots.includes("Allow: /");
-if (esPreview) {
+if (!indexar) {
+  if (!robots.includes("Disallow: /")) fail("Sin indexación, robots.txt debe llevar Disallow: /");
+  if (robots.includes("Allow: /") || robots.includes("Sitemap:")) {
+    fail("Sin indexación, robots.txt no debe permitir el rastreo ni publicar el sitemap");
+  }
   for (const file of pageFiles) {
     const html = htmlFiles.get(file);
     if (!html?.includes('<meta name="robots" content="noindex">')) {
-      fail(`${file}: la vista previa debe llevar meta robots noindex`);
+      fail(`${file}: sin indexación debe llevar meta robots noindex`);
     }
   }
-} else if (!robots.includes("Sitemap: https://www.mentalcareclinic.com/sitemap.xml")) {
-  fail("robots.txt no declara el sitemap");
-}
-const headersDist = await readFile(path.join(root, "_headers"), "utf8");
-const csp = headersDist.match(/^\s*Content-Security-Policy:\s*(.+)$/m)?.[1] ?? "";
-if (!csp.includes("script-src") || !csp.includes("frame-src https://www.google.com")) {
-  fail("Falta la Content-Security-Policy en dist/_headers");
-}
-if (csp.includes("unsafe-eval") || csp.includes("unsafe-inline")) {
-  fail("La CSP no debe usar unsafe-eval ni unsafe-inline");
-}
-if (esPreview) {
-  if (!headersDist.includes("X-Robots-Tag: noindex")) {
-    fail("La vista previa debe añadir X-Robots-Tag: noindex en dist/_headers");
+} else {
+  if (!robots.includes("Allow: /")) fail("Con indexación, robots.txt debe llevar Allow: /");
+  if (robots.includes("Disallow: /")) fail("Con indexación, robots.txt no debe llevar Disallow: /");
+  if (!robots.includes(`Sitemap: ${siteUrl}/sitemap.xml`)) {
+    fail(`Con indexación, robots.txt debe declarar Sitemap: ${siteUrl}/sitemap.xml`);
   }
-} else if (headersDist.includes("X-Robots-Tag")) {
-  fail("dist/_headers de producción no debe llevar X-Robots-Tag");
+  for (const file of pageFiles) {
+    const html = htmlFiles.get(file);
+    const es404 = rutaDeArchivo(file) === "/404";
+    if (es404) {
+      if (!html?.includes('name="robots" content="noindex')) fail(`${file}: la 404 conserva noindex`);
+    } else if (!html?.includes('<meta name="robots" content="index, follow">')) {
+      fail(`${file}: con indexación debe llevar meta robots index, follow`);
+    }
+  }
+}
+
+const listado = spawnSync("git", ["ls-files"], { encoding: "utf8" });
+if (listado.status !== 0) fail("git ls-files no pudo listar el repositorio");
+else {
+  const restos = listado.stdout.split("\n").filter((linea) => /wrangler|worker\//.test(linea));
+  if (restos.length) fail(`Quedan archivos de Cloudflare: ${restos.join(", ")}`);
 }
 
 const altPatio =
@@ -252,4 +294,6 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Verificación correcta: ${pageFiles.length} páginas HTML, redirecciones, sitemap y marcadores.`);
+console.log(
+  `Verificación correcta: ${pageFiles.length} páginas HTML, canónicas en ${siteUrl}, ${indexar ? "index, follow y Sitemap" : "noindex y Disallow: /"}.`,
+);
