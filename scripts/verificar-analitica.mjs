@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { build } from "astro";
 import { chromium } from "playwright-core";
-import { calcularPolitica, escribirPolitica } from "./csp.mjs";
 import { chromeEjecutable, servir } from "./servir.mjs";
 
 const id = "G-TEST1234";
@@ -24,9 +23,7 @@ if (produccion.includes("facebook.net") || produccion.includes("fbevents")) {
 }
 
 process.env.PUBLIC_GA4_ID = id;
-delete process.env.PREVIEW;
 await build({ outDir: "dist-analitica", logLevel: "error" });
-await escribirPolitica("dist-analitica", await calcularPolitica("dist-analitica"));
 
 const servidor = await servir("dist-analitica", puerto);
 const navegador = await chromium.launch({

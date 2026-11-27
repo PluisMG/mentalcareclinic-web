@@ -1,3 +1,5 @@
+import { urlDelSitio } from "../../scripts/sitio-url.mjs";
+
 /**
  * Datos de la clínica. Los textos de cada página están en src/content/.
  * `pendientes` guarda datos sin confirmar. No se interpolan en el HTML ni en el JSON-LD.
@@ -43,7 +45,7 @@ export const pendientes = {
 
 export const site = {
   nombre: "MentalCareClinic",
-  url: "https://www.mentalcareclinic.com",
+  url: urlDelSitio(),
   locale: "es-MX",
   idioma: "es-MX",
   email: "info@mentalcareclinic.com",
@@ -144,9 +146,9 @@ export function hayAnalitica(): boolean {
   return Boolean(analitica.ga4);
 }
 
-/** Vista previa: `PREVIEW=1 npm run build`. No indexa. Las canónicas no cambian. */
-export function esVistaPrevia(): boolean {
-  return process.env["PREVIEW"] === "1";
+/** Solo se indexa con producción + PUBLIC_INDEXAR=1, y ese valor solo se carga con AP de Pedro. */
+export function seIndexa(): boolean {
+  return process.env.VERCEL_ENV === "production" && process.env.PUBLIC_INDEXAR === "1";
 }
 
 export function whatsappHref(mensaje: string): string {

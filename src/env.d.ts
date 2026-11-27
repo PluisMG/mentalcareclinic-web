@@ -2,6 +2,8 @@
 
 interface ImportMetaEnv {
   readonly PUBLIC_GA4_ID?: string;
+  readonly PUBLIC_SITE_URL?: string;
+  readonly PUBLIC_INDEXAR?: string;
 }
 
 interface ImportMeta {

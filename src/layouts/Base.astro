@@ -6,7 +6,7 @@ import {
   analitica,
   canonical,
   datosEstructurados,
-  esVistaPrevia,
+  seIndexa,
   hayAnalitica,
   site,
 } from "../config/site";
@@ -20,7 +20,7 @@ interface Props {
 }
 
 const { title, description, path, whatsappMessage, noindex = false } = Astro.props;
-const vistaPrevia = esVistaPrevia();
+const vistaPrevia = !seIndexa();
 const robots = vistaPrevia ? "noindex" : noindex ? "noindex, follow" : "index, follow";
 const canon = canonical(path);
 const json = JSON.stringify(datosEstructurados({ path, titulo: title, descripcion: description })).replace(

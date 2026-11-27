@@ -1,10 +1,9 @@
 # build output
 dist/
 dist-analitica/
-.wrangler/
+.vercel/
 # generated types
 .astro/
-worker-configuration.d.ts
 
 # dependencies
 node_modules/

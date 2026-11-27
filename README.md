@@ -22,7 +22,7 @@ npm run build
 npm run preview
 ```
 
-`npm run build` deja el sitio en `dist/` y corre la verificación: marcadores, enlaces internos y los 301 del Worker.
+`npm run build` deja el sitio en `dist/` y corre la verificación en Node: marcadores, enlaces internos, canónicas y `vercel.json`. Las pruebas con Chrome (`npm run test:e2e`) no forman parte del build.
 
 ## Dónde se edita cada cosa
 
@@ -38,44 +38,29 @@ npm run preview
 | Aviso de privacidad | `src/content/privacidad.ts` |
 | Colores y tipografía | `src/styles/global.css` |
 | Fotos nuevas | `src/assets/images/` y el componente que las usa |
-| Rutas viejas (`/inicio`, `/erpa`, `/erep`) | `worker/redirects.mjs` |
+| Rutas viejas (`/inicio`, `/erpa`, `/erep`) | `vercel.json` |
 
 El teléfono de llamada es `961 369 2795` (`tel:+529613692795`). El de WhatsApp es `961 100 3707` y todos los enlaces salen de `whatsappHref()` hacia `https://wa.me/529611003707`, con un mensaje distinto por página. En pantallas de menos de 1080 px el enlace del pie es una barra de ancho completo, al final del documento y sin `position: fixed`: así no tapa «Llamar» ni «Dirección» mientras se hace scroll. A partir de 1080 px esa barra se oculta; el encabezado ya muestra WhatsApp.
 
-## Cómo se desplegaría en Cloudflare
+## Vercel (sin desplegar sin AP)
 
-No hay credenciales en este repositorio. `wrangler.jsonc` no trae `account_id`, `routes` ni dominio, y `workers_dev` está en `false`. Por eso un despliegue no apunta el DNS ni publica `workers.dev`. No se despliega desde aquí: hace falta que Pedro lo apruebe y que alguien, con la cuenta de Cloudflare ya autenticada, corra los comandos.
+No hay credenciales en este repositorio y este cambio no conecta el proyecto a Vercel, no crea el subdominio y no toca el DNS. `vercel.json` es la única fuente de redirecciones y encabezados. No se despliega desde aquí: hace falta una AP de Pedro.
 
-1. Compilar: `npm run build`. La salida queda en `dist/`.
-2. Publicar el Worker y los assets juntos: `npx wrangler deploy`. Si cambian los bindings, `npm run cf-types` regenera `worker-configuration.d.ts`. Ese archivo no se versiona.
-3. El dominio `www` no se engancha solo. Cuando Pedro lo apruebe, el dominio se añade en el panel o con una ruta explícita. Ese paso sí toca DNS y no forma parte de este repositorio.
-4. Las rutas viejas responden 301 desde `worker/index.ts`, que copia `url.search`. Así se conservan `utm_source`, `utm_medium` y el resto de la consulta:
-   - `/inicio` y `/inicio/` → `/`
-   - `/erpa` y `/erpa/` → `/residencia-puertas-abiertas`
-   - `/erep` y `/erep/` → `/estabilizacion`
-   La lista vive solo en `worker/redirects.mjs`. La comparación no distingue mayúsculas: `/ERPA`, `/Erep` y `/INICIO` también responden 301. `public/_redirects` no declara rutas; el comentario dice que el Worker es el que conserva el query string. Astro sigue generando el HTML de respaldo para `npm run preview`, desde el mismo módulo; esa vista local no es el 301.
-5. `public/_headers` agrega las cabeceras de seguridad a los assets. El build añade una `Content-Security-Policy` con hashes del HTML, sin `unsafe-eval` ni `unsafe-inline`. El Worker pone esas mismas cabeceras (HSTS, `X-Frame-Options`, CSP y el resto) en todas sus respuestas: 301, páginas y 404. Con `PREVIEW=1` también añade `X-Robots-Tag: noindex`.
-6. `html_handling` es `drop-trailing-slash`, igual que `trailingSlash: "never"` de Astro: `/contacto` responde 200 y `/contacto/` vuelve a `/contacto`. `not_found_handling` es `404-page`, el equivalente de la `404.html` que Pages habría detectado solo.
-7. `robots.txt` y `sitemap.xml` se generan en el build. En producción permiten el rastreo y el sitemap apunta a `https://www.mentalcareclinic.com`.
+1. Compilar: `npm run build`. La salida queda en `dist/`. El build solo usa Node. Chrome corre en `npm run test:e2e` y en GitHub Actions.
+2. La URL canónica sale de `PUBLIC_SITE_URL`. AP-2026-11-26-10 la fija en `https://app.mentalcareclinic.com` (está en `.env.example` y en el CI, en claro). En local, si la variable no llega al proceso, el build usa `http://127.0.0.1:43123`. Con `VERCEL_ENV=production` y sin URL, el build sale con error.
+3. Las rutas viejas responden 301 desde `vercel.json`, con `statusCode: 301`. Vercel conserva el query string. Así se mantienen `utm_source`, `utm_medium` y el resto de la consulta:
+   - `/inicio` → `/`
+   - `/erpa` → `/residencia-puertas-abiertas`
+   - `/erep` → `/estabilizacion`
+   `/consulta-externa` e `/historia` responden 200: son las mismas rutas del sitio nuevo. `trailingSlash: false` manda la barra final (`/erpa/`) a la ruta sin barra con 308 y después aplica el 301. Las mayúsculas (`/ERPA`) no tienen regla: el diseño (D7) no las cubre.
+4. Los encabezados de seguridad (HSTS de dos años, `nosniff`, `DENY`, COOP, Permissions-Policy y la CSP) van en `vercel.json` para `/(.*)`. La CSP la calcula `scripts/csp.mjs` con los hashes del HTML y `npm run build` comprueba que coincida. En un host `*.vercel.app` se suma `X-Robots-Tag: noindex`.
+5. `robots.txt` y `sitemap.xml` se generan en el build. El sitemap sale de `rutasPublicas`. Mientras `PUBLIC_INDEXAR` no sea `1` en un build de producción, todas las páginas llevan `noindex` y `robots.txt` queda en `Disallow: /`.
 
-## Vista previa (`PREVIEW=1`)
+## Vista previa
 
-Para una copia que no debe indexarse (por ejemplo una vista previa en Cloudflare), el build se corre así:
+No hay proyecto de Vercel ni vista previa publicada. En local, `scripts/servir.mjs` lee `vercel.json` y simula los 301, la barra final y los encabezados. Lo cubren `scripts/verificar-redirects.mjs` y `scripts/recorridos.mjs`, dentro de `npm run test:e2e`.
 
-```bash
-PREVIEW=1 npm run build
-```
-
-Solo en ese caso el HTML de todas las páginas lleva `<meta name="robots" content="noindex">`, `dist/_headers` recibe `X-Robots-Tag: noindex` y `robots.txt` queda en:
-
-```
-User-agent: *
-Disallow: /
-```
-
-`public/_headers` no lleva esa cabecera. Para que el 301 del Worker también la envíe, la vista previa local es `npx wrangler dev --var PREVIEW:1` después de ese build. Un despliegue de vista previa, solo si Pedro lo aprueba, sería el mismo build y `npx wrangler deploy --var PREVIEW:1`. En `wrangler.jsonc` la variable queda vacía: producción no manda `noindex`.
-
-Sin `PREVIEW=1`, el build de producción sigue siendo rastreable (`Allow: /` y el sitemap). Las canónicas, el sitemap y Open Graph no cambian: siguen en `https://www.mentalcareclinic.com`. No ponga `PREVIEW=1` en el proyecto de producción.
+La indexación sigue apagada (AP-2026-11-26-10). Solo un build con `VERCEL_ENV=production` y `PUBLIC_INDEXAR=1` quita el `noindex`, y ese valor no se carga sin una AP de Pedro.
 
 La redirección del dominio sin `www` se hace en el registrador (Squarespace Domains), no en este sitio. Hoy `https://mentalcareclinic.com` no tiene certificado. No se modificó el DNS.
 
